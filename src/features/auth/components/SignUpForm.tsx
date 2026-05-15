@@ -42,7 +42,7 @@ export default function SignUpForm() {
           return;
         }
         toast.success('Account created successfully!');
-        router.push(ROUTES.SIGN_IN);
+        router.replace(ROUTES.SIGN_IN);
       } catch (error) {
         toast.error('An error occurred during sign up.');
       }
@@ -99,7 +99,7 @@ export default function SignUpForm() {
       >
         {isPending ? 'Creating Account...' : 'Create Account'}
         {isPending ? (
-          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" /> 
+          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (
           <HugeiconsIcon icon={ArrowRight02Icon} />
         )}

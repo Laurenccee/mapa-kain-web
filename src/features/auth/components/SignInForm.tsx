@@ -17,9 +17,12 @@ import {
 import { signInAction } from '../actions/auth';
 import { toast } from 'sonner';
 import FormActions from './FormActions';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/utils/constants/routes';
 
 export default function SignInForm() {
   const [isPending, startTransistion] = useTransition();
+  const router = useRouter();
 
   const { control, handleSubmit, watch, setValue } = useForm<SignInData>({
     resolver: zodResolver(SignInSchema),
@@ -40,6 +43,7 @@ export default function SignInForm() {
           return;
         }
         toast.success('Signed in successfully!');
+        router.replace(ROUTES.ROOT);
       } catch (error) {
         toast.error('An error occurred during sign in.');
       }
@@ -96,7 +100,7 @@ export default function SignInForm() {
       >
         {isPending ? 'Signing in...' : 'Sign in to your account'}
         {isPending ? (
-          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" /> 
+          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (
           <HugeiconsIcon icon={ArrowRight02Icon} />
         )}

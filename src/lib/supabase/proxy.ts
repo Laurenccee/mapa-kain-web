@@ -41,45 +41,44 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getClaims();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const path = request.nextUrl.pathname;
 
-  const user = data?.claims;
-
-  const authRoutes = [
+  const AUTH_ROUTES = [
+    ROUTES.ROOT,
     ROUTES.SIGN_IN,
     ROUTES.SIGN_UP,
     ROUTES.FORGET_PASSWORD,
     ROUTES.EMAIL_VERIFICATION,
   ];
 
-  if (!user && !authRoutes.includes(request.nextUrl.pathname)) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = ROUTES.SIGN_IN;
-    return NextResponse.redirect(url);
+  const PUBLIC_ROUTES = [ROUTES.MAP];
+
+  if (!user) {
+    if (!AUTH_ROUTES.includes(path) && !PUBLIC_ROUTES.includes(path)) {
+      return NextResponse.redirect(new URL(ROUTES.MAP, request.url));
+    }
+    return supabaseResponse;
   }
 
   if (user) {
-    // Check profile (skip if already on profile-setup to avoid loop)
-    if (request.nextUrl.pathname !== ROUTES.PROFILE_SETUP) {
+    if (AUTH_ROUTES.includes(path)) {
+      return NextResponse.redirect(new URL(ROUTES.MAP, request.url));
+    }
+    if (path !== ROUTES.PROFILE_SETUP) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', user.sub)
+        .eq('id', user.id)
         .single();
 
       if (!profile) {
-        const url = request.nextUrl.clone();
-        url.pathname = ROUTES.PROFILE_SETUP;
-        return NextResponse.redirect(url);
+        return NextResponse.redirect(
+          new URL(ROUTES.PROFILE_SETUP, request.url),
+        );
       }
-    }
-
-    // Has profile, redirect away from auth pages
-    if (authRoutes.includes(request.nextUrl.pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = ROUTES.DASHBOARD;
-      return NextResponse.redirect(url);
     }
   }
 

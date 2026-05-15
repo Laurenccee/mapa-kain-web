@@ -27,3 +27,23 @@ export async function createClient() {
     },
   );
 }
+
+export async function createAdminClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        // We provide empty implementations to satisfy TypeScript.
+        // Since this is an admin client using a service role,
+        // it doesn't need to read or write browser cookies.
+        getAll() {
+          return [];
+        },
+        setAll() {
+          // Do nothing
+        },
+      },
+    },
+  );
+}

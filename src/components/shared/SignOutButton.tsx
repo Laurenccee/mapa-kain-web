@@ -1,10 +1,12 @@
 'use client';
 
 import { useTransition } from 'react';
-import { Button } from '../ui/button';
+import { Button, buttonVariants } from '../ui/button';
 import { useRouter } from 'next/navigation';
 import { signOutAction } from '@/features/auth/actions/auth';
 import { toast } from 'sonner';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loader, Logout01Icon } from '@hugeicons/core-free-icons';
 
 export default function SignOutButton() {
   const [isPending, startTransition] = useTransition();
@@ -28,8 +30,17 @@ export default function SignOutButton() {
     });
   };
   return (
-    <Button onClick={handleSignOut} disabled={isPending}>
-      {isPending ? 'Signing Out...' : 'Sign Out'}
+    <Button
+      onClick={handleSignOut}
+      disabled={isPending}
+      size="icon-lg"
+      variant="secondary"
+    >
+      {isPending ? (
+        <HugeiconsIcon icon={Loader} className="animate-spin" />
+      ) : (
+        <HugeiconsIcon icon={Logout01Icon} />
+      )}
     </Button>
   );
 }

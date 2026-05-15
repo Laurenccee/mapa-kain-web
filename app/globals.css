@@ -96,13 +96,6 @@
   --font-heading: var(--font-heading);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--background);
-    --foreground: var(--foreground);
-  }
-}
-
 body {
   font-family: var(--font-serif), sans-serif;
 }
@@ -173,7 +166,7 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply scroll-smooth;
