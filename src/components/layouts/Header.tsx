@@ -19,7 +19,7 @@ export default function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed w-full top-0 left-0 right-0 z-5 h-16 px-4 md:px-6 py-3 bg-transparent',
+        'fixed w-full top-0 left-0 right-0 z-50 h-16 px-4 md:px-6 py-3 bg-transparent',
         className,
       )}
     >

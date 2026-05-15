@@ -18,7 +18,7 @@ export function ThemeToggle() {
 
   return (
     <Toggle
-      variant="outline"
+      variant="secondary"
       size="lg"
       className="group relative aspect-square"
       // These attributes will now match the server exactly until mounting completes

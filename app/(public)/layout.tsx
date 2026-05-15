@@ -8,23 +8,13 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen w-full bg-background">
-      {/* SignOutButton: 
-        - top-4 right-4: Standard padding from the edges
-        - z-50: Ensures it stays above the map and other content
-      */}
+    // h-screen prevents the whole page from scrolling
+    <div className="relative h-screen w-full flex flex-col bg-background overflow-hidden">
       <Header />
 
-      {/* Main Content:
-        - pb-24: Space for the floating bottom bar
-      */}
-      <main className="pb-24">{children}</main>
+      {/* flex-1 makes this container grow to fill all available space */}
+      <main className="flex-1 relative">{children}</main>
 
-      {/* BottomTabBar:
-        - bottom-6: Lifted slightly off the edge for that "floating" look
-        - left-1/2 -translate-x-1/2: Perfect horizontal centering
-        - z-50: Top layer
-      */}
       <BottomTabBar />
     </div>
   );

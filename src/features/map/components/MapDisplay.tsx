@@ -2,90 +2,139 @@
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const STYLES = {
   light: 'https://tiles.openfreemap.org/styles/positron',
   dark: 'https://tiles.openfreemap.org/styles/dark',
 };
 
+const CACHE_KEY = 'user_map_location';
+
+interface CachedLocation {
+  lng: number;
+  lat: number;
+  timestamp: number;
+}
+
 export default function MapDisplay() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+
+  // The map is only "ready" when it exists AND is centered on a correct location
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [isLocating, setIsLocating] = useState(true);
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
     const isDark = document.documentElement.classList.contains('dark');
-    const initialStyle = isDark ? STYLES.dark : STYLES.light;
+    const style = isDark ? STYLES.dark : STYLES.light;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: initialStyle,
-      center: [0, 0],
-      zoom: 7,
-      // Removed 'antialias' from here to satisfy standard MapOptions TypeScript interfaces
-      pitch: 55, // Tilts the camera up 55 degrees (perfect for 3D extrusions)
-      bearing: -15, // Slightly rotates the map orientation (15 degrees counterclockwise)
-      maxPitch: 85, // Allows the camera to tilt up to 85 degrees for a more dramatic 3D effect
-    });
+    // Helper to initialize map once coordinates are secured
+    const initMap = (centerCoords: [number, number], precise: boolean) => {
+      if (!mapContainer.current) return;
 
-    const currentMap = map.current;
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: style,
+        center: centerCoords,
+        zoom: 14,
+        pitch: 55,
+        bearing: -15,
+        maxPitch: 85,
+      });
 
-    currentMap.addControl(new maplibregl.NavigationControl(), 'top-right');
+      const currentMap = map.current;
 
-    // Fixed Option Parameter for MapLibre Types
-    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
       const geolocateControl = new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserLocation: true,
       });
 
-      currentMap.addControl(geolocateControl, 'top-right');
-      currentMap.on('load', () => {
-        geolocateControl.trigger();
-        add3DBuildings(currentMap);
+      // Keep cache up to date if user moves around
+      geolocateControl.on('geolocate', (e: any) => {
+        const { longitude, latitude } = e.coords;
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            lng: longitude,
+            lat: latitude,
+            timestamp: Date.now(),
+          }),
+        );
+        setIsLocating(false);
       });
+
+      currentMap.addControl(geolocateControl, 'bottom-right');
+      currentMap.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+      currentMap.on('load', () => {
+        add3DBuildings(currentMap);
+
+        // If we only had a rough/cached location, trigger control to refine position
+        if (!precise) {
+          geolocateControl.trigger();
+        } else {
+          setIsLocating(false);
+        }
+
+        // Reveal the map to the user now that it's sitting on the pin
+        setIsMapReady(true);
+      });
+    };
+
+    // --- Execution flow execution ---
+    let cachedData: CachedLocation | null = null;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) cachedData = JSON.parse(cached);
+    } catch (e) {
+      console.error(e);
+    }
+
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+    if (cachedData && Date.now() - cachedData.timestamp < ONE_DAY) {
+      // Scenario A: Cache is fresh. Build map instantly at cached location.
+      initMap([cachedData.lng, cachedData.lat], false);
     } else {
-      console.warn(
-        'Browser environment or device permissions blocked Geolocation initialization.',
+      // Scenario B: No cache. Force browser to get location BEFORE building map.
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              lng: longitude,
+              lat: latitude,
+              timestamp: Date.now(),
+            }),
+          );
+          initMap([longitude, latitude], true);
+        },
+        (error) => {
+          console.warn(
+            'Location blocked or failed. Using London fallback.',
+            error,
+          );
+          const fallbackLondon: [number, number] = [-0.118674, 51.500728];
+          initMap(fallbackLondon, true);
+        },
+        { enableHighAccuracy: true, timeout: 8000 },
       );
     }
 
-    currentMap.on('style.data', () => {
-      add3DBuildings(currentMap);
-    });
-
     return () => {
-      currentMap.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!map.current) return;
-
-    const observer = new MutationObserver(() => {
-      if (!map.current) return;
-      const isDark = document.documentElement.classList.contains('dark');
-      const targetStyle = isDark ? STYLES.dark : STYLES.light;
-
-      if (map.current.getStyle()?.name !== (isDark ? 'dark' : 'positron')) {
-        map.current.setStyle(targetStyle);
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
       }
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
+    };
   }, []);
 
   const add3DBuildings = (mapInstance: maplibregl.Map) => {
     if (mapInstance.getLayer('3d-buildings')) return;
-
     mapInstance.addLayer({
       id: '3d-buildings',
       source: 'openmaptiles',
@@ -122,5 +171,28 @@ export default function MapDisplay() {
     });
   };
 
-  return <div ref={mapContainer} className="w-full h-screen" />;
+  return (
+    <div className="relative w-full h-full">
+      {/* 1. BLURRED FULL LOADER: Visible until map has finished loading directly on coordinates */}
+      {!isMapReady && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/30 backdrop-blur-md transition-all duration-300">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      )}
+
+      {/* 2. RE-CALIBRATING BANNER: Only shows if it mounted via cached coordinates and is silently checking GPS */}
+      {isMapReady && isLocating && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border shadow-lg">
+            <div className="h-3 w-3 animate-ping rounded-full bg-primary" />
+            <span className="text-xs font-medium">
+              Updating location accuracy...
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div ref={mapContainer} className="w-full h-full" />
+    </div>
+  );
 }
