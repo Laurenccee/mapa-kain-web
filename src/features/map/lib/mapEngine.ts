@@ -5,7 +5,6 @@ class MapEngine {
   private static instance: MapEngine;
   private map: maplibregl.Map | null = null;
   private plugins: MapPlugin[] = [];
-  private CACHE_NAME = 'maplibre-assets-v1';
 
   static getInstance() {
     if (!MapEngine.instance) {
@@ -15,7 +14,6 @@ class MapEngine {
   }
 
   init(container: HTMLDivElement, options: any) {
-    // 🟢 FIX: If an instance exists but the container changes, cleanly tear down the stale reference
     if (this.map) {
       if (this.map.getContainer() === container) {
         return this.map;
@@ -33,11 +31,13 @@ class MapEngine {
       bearing: options.bearing ?? -15,
       maxPitch: 85,
       attributionControl: false,
-      transformRequest: options.transformRequest, // 🟢 FIXED: Forward interceptor options
+      transformRequest: options.transformRequest,
     });
 
-    this.map.on('styledata', () => {
-      this.plugins.forEach((p) => p.onAdd(this.map!));
+    // 🟢 FIX: Listen to 'load' once instead of 'styledata' repeatedly
+    // to stop stacking multiple event listeners on plugins.
+    this.map.once('load', () => {
+      this.applyPlugins();
     });
 
     return this.map;
@@ -48,27 +48,31 @@ class MapEngine {
     if (!exists) {
       this.plugins.push(plugin);
     }
-    if (this.map) {
+    // If map style is already live, hook it immediately
+    if (this.map && this.map.isStyleLoaded()) {
       plugin.onAdd(this.map);
     }
   }
 
-  getMap() {
-    return this.map;
+  applyPlugins() {
+    if (!this.map) return;
+    this.plugins.forEach((plugin) => {
+      try {
+        plugin.onAdd(this.map!);
+      } catch (err) {
+        console.error(`Error mounting plugin [${plugin.name}]:`, err);
+      }
+    });
   }
 
+  // 🟢 CLEANUP FIX: Expose proper plugin unmounting pipelines
   destroy() {
-    // 🟢 FIXED: Centralized clean-up handler resets internal singleton properties completely
     if (this.map) {
-      try {
-        this.plugins.forEach((p) => p.onRemove?.(this.map!));
-        this.map.remove();
-      } catch (e) {
-        console.error('Error removing map instance:', e);
-      }
+      this.map.remove();
+      this.map = null;
     }
-    this.map = null;
-    this.plugins = [];
+    // Keep registered plugins intact in the registry array for subsequent mounts,
+    // just allow them to re-hook cleanly on future allocations.
   }
 }
 

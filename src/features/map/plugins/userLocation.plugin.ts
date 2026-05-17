@@ -2,42 +2,42 @@ import maplibregl from 'maplibre-gl';
 import type { MapPlugin } from '../types';
 import { MAPS } from '@/utils/constants/maps';
 
-interface ExtendedMapPlugin extends MapPlugin {
-  _onLocationResolvedCallback: (() => void) | null;
-  _hasFreshCache: boolean;
-  _isControlAdded: boolean; // 🟢 Prevents duplicate controls from rendering
-  initLocation: (map: maplibregl.Map, onLocationResolved: () => void) => void;
+interface LocationPluginInterface extends MapPlugin {
+  _callback: (() => void) | null;
+  _isControlAdded: boolean;
+  _hasFreshCache: boolean; // 🟢 Track if we bypassed via local storage cache
+  initLocation: (onLocationResolved: () => void) => void;
+  reset: () => void;
 }
 
-export const userLocationPlugin: ExtendedMapPlugin = {
+export const userLocationPlugin: LocationPluginInterface = {
   name: 'user-location',
-  _onLocationResolvedCallback: null,
-  _hasFreshCache: false,
+  _callback: null,
   _isControlAdded: false,
+  _hasFreshCache: false,
 
-  initLocation(map, onLocationResolved) {
-    this._onLocationResolvedCallback = onLocationResolved;
+  initLocation(onLocationResolved) {
+    this._callback = onLocationResolved;
 
+    // 🟢 Step 1: Check cache immediately on application startup
     const cached = localStorage.getItem(MAPS.CACHE_KEY);
     if (cached) {
       try {
-        const { lng, lat, timestamp } = JSON.parse(cached);
+        const { timestamp } = JSON.parse(cached);
         const isExpired = Date.now() - timestamp > MAPS.ONE_DAY;
 
         if (!isExpired) {
-          map.jumpTo({ center: [lng, lat], zoom: 17 });
           this._hasFreshCache = true;
-          // Note: We deliberately wait for the map rendering loop
-          // to settle completely before dismissing the loading state.
+          // ⚡ Hot Start: Immediately execute layout unlock callback, dropping the blur shield
+          onLocationResolved();
         }
       } catch (e) {
-        console.error('Failed reading cached coordinates:', e);
+        console.error('Failed reading cached timestamp:', e);
       }
     }
   },
 
   onAdd(map) {
-    // 🟢 Guard clause stops duplication across style updates
     if (this._isControlAdded) return;
     this._isControlAdded = true;
 
@@ -48,7 +48,7 @@ export const userLocationPlugin: ExtendedMapPlugin = {
       positionOptions: {
         enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: 0,
+        maximumAge: 30000, // Allow reading internal device system location cache
       },
     });
 
@@ -56,6 +56,11 @@ export const userLocationPlugin: ExtendedMapPlugin = {
 
     geoControl.on('geolocate', (e: any) => {
       if (!e?.coords) return;
+
+      const targetCenter: [number, number] = [
+        e.coords.longitude,
+        e.coords.latitude,
+      ];
 
       localStorage.setItem(
         MAPS.CACHE_KEY,
@@ -66,25 +71,36 @@ export const userLocationPlugin: ExtendedMapPlugin = {
         }),
       );
 
-      // ⚡ Lift the loading overlay screen now that the GPS blue dot is active
-      if (this._onLocationResolvedCallback) {
-        this._onLocationResolvedCallback();
+      if (map) {
+        map.easeTo({
+          center: targetCenter,
+          zoom: 17,
+          duration: 1200, // Smooth 1.2-second fluid animation slide
+          essential: true,
+        });
+      }
+
+      // 🟢 Step 2: Cold Start Fallback
+      // If we DID NOT have a fresh cache, lift the loading shield now that the real GPS position arrived
+      if (!this._hasFreshCache && this._callback) {
+        this._callback();
+        this._callback = null;
       }
     });
 
-    // 🟢 FIX: Wrap in a timeout execution frame so MapLibre can register
-    // the control's internal layout nodes before we trigger it.
+    // Fire hardware trace loop cleanly
     setTimeout(() => {
-      if (map.getContainer() && geoControl) {
+      if (map.getContainer()) {
         try {
           geoControl.trigger();
-        } catch (err) {
-          console.warn(
-            'Geolocation track deferred during initialization:',
-            err,
-          );
-        }
+        } catch (err) {}
       }
-    }, 50);
+    }, 100);
+  },
+
+  reset() {
+    this._isControlAdded = false;
+    this._hasFreshCache = false;
+    this._callback = null;
   },
 };

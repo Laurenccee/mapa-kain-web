@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { mapEngine } from '../lib/mapEngine';
 import { MAPS } from '@/utils/constants/maps';
-import { registerMapPluginsOnce } from '../plugins';
+import { buildingSelectionPlugin } from '../plugins/buildingSelection.plugin';
+import { hoverPlugin } from '../plugins/hover.plugin';
+import { userLocationPlugin } from '../plugins/userLocation.plugin';
 
 export function useMaplibreMap(
   containerRef: React.RefObject<HTMLDivElement | null>,
@@ -14,146 +16,98 @@ export function useMaplibreMap(
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    let map: maplibregl.Map | null = null;
+    const isDark = document.documentElement.classList.contains('dark');
+    const style = isDark ? MAPS.STYLES.dark : MAPS.STYLES.light;
+    let initialCenter = MAPS.FALLBACK_PHILIPPINES;
 
-    const initializeMapComponent = () => {
-      if (mapRef.current) return;
+    // Grab cached coordinates to prevent map framing flicker on initial canvas allocation
+    const cached = localStorage.getItem(MAPS.CACHE_KEY);
+    if (cached) {
+      try {
+        const { lng, lat } = JSON.parse(cached);
+        initialCenter = [lng, lat];
+      } catch (e) {
+        console.error('Error parsing cache fallback positions:', e);
+      }
+    }
 
-      const isDark = document.documentElement.classList.contains('dark');
-      const style = isDark ? MAPS.STYLES.dark : MAPS.STYLES.light;
+    // 🟢 Register and fire cache validation checks BEFORE mounting engine canvas
+    // This allows onLocationReady to trigger synchronously if cache handles the frame match.
+    userLocationPlugin.initLocation(onLocationReady);
+    mapEngine.registerPlugin(userLocationPlugin);
+    mapEngine.registerPlugin(buildingSelectionPlugin);
+    mapEngine.registerPlugin(hoverPlugin);
 
-      let initialCenter = MAPS.FALLBACK_PHILIPPINES;
-
-      const cached = localStorage.getItem(MAPS.CACHE_KEY);
-      if (cached) {
-        try {
-          const { lng, lat } = JSON.parse(cached);
-          initialCenter = [lng, lat];
-        } catch (e) {
-          console.error('Error reading cache:', e);
+    const map = mapEngine.init(containerRef.current, {
+      style,
+      center: initialCenter,
+      transformRequest: (
+        url: string,
+        resourceType?: maplibregl.ResourceType,
+      ) => {
+        if (resourceType === 'Tile' || resourceType === 'Style') {
+          return { url, credentials: 'same-origin' as const };
         }
+        return { url };
+      },
+    });
+
+    mapRef.current = map;
+
+    map.once('load', () => {
+      if (!map) return;
+
+      if (!map.getLayer('3d-buildings')) {
+        map.addLayer({
+          id: '3d-buildings',
+          source: 'openmaptiles',
+          'source-layer': 'building',
+          type: 'fill-extrusion',
+          minzoom: 14,
+          paint: {
+            'fill-extrusion-color': isDark ? '#343a40' : '#cbd5e1',
+            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
+            'fill-extrusion-base': [
+              'coalesce',
+              ['get', 'render_min_height'],
+              0,
+            ],
+            'fill-extrusion-opacity': 0.85,
+          },
+        });
       }
 
-      map = mapEngine.init(containerRef.current!, {
-        style,
-        center: initialCenter,
-        zoom: 17,
-        pitch: 55,
-        bearing: -15,
-        maxPitch: 85,
-        transformRequest: (
-          url: string,
-          resourceType?: maplibregl.ResourceType,
-        ) => {
-          if (resourceType === 'Tile' || resourceType === 'Style') {
-            return { url, credentials: 'same-origin' as const };
-          }
-          return { url };
-        },
-      });
-
-      mapRef.current = map;
-
-      // Register shared geolocation callback handler
-      import('../plugins/userLocation.plugin').then(
-        ({ userLocationPlugin }) => {
-          if (map) {
-            userLocationPlugin.initLocation(map, onLocationReady);
-          }
-        },
-      );
-
-      map.on('load', () => {
-        if (!map) return;
-
-        // Base 3D Geometry
-        if (!map.getLayer('3d-buildings')) {
-          map.addLayer({
-            id: '3d-buildings',
-            source: 'openmaptiles',
-            'source-layer': 'building',
-            type: 'fill-extrusion',
-            minzoom: 14,
-            paint: {
-              'fill-extrusion-color': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false],
-                '#3b82f6',
-                isDark ? '#343a40' : '#cbd5e1',
-              ],
-              'fill-extrusion-height': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                14,
-                0,
-                15,
-                ['number', ['coalesce', ['get', 'render_height'], 15]],
-              ],
-              'fill-extrusion-base': [
-                'step',
-                ['zoom'],
-                0,
-                15,
-                ['number', ['coalesce', ['get', 'render_min_height'], 0]],
-              ],
-              'fill-extrusion-opacity': 0.85,
-            },
-          });
-        }
-
-        if (!map.getLayer('3d-buildings-highlighted')) {
-          map.addLayer({
-            id: '3d-buildings-highlighted',
-            source: 'openmaptiles',
-            'source-layer': 'building',
-            type: 'fill-extrusion',
-            minzoom: 14,
-            filter: ['==', ['id'], ''],
-            paint: {
-              'fill-extrusion-color': '#3b82f6',
-              'fill-extrusion-height': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                14,
-                0,
-                15,
-                ['number', ['coalesce', ['get', 'render_height'], 15]],
-              ],
-              'fill-extrusion-base': [
-                'step',
-                ['zoom'],
-                0,
-                15,
-                ['number', ['coalesce', ['get', 'render_min_height'], 0]],
-              ],
-              'fill-extrusion-opacity': 0.95,
-            },
-          });
-        }
-
-        registerMapPluginsOnce();
-
-        // ⚡ Wait until map state is 'idle' (all assets/tiles rendered) to toggle the gate
-        map.once('idle', () => {
-          if (map) onMapLoaded(map);
+      if (!map.getLayer('3d-buildings-highlighted')) {
+        map.addLayer({
+          id: '3d-buildings-highlighted',
+          source: 'openmaptiles',
+          'source-layer': 'building',
+          type: 'fill-extrusion',
+          minzoom: 14,
+          filter: ['==', ['id'], ''],
+          paint: {
+            'fill-extrusion-color': '#3b82f6',
+            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
+            'fill-extrusion-base': [
+              'coalesce',
+              ['get', 'render_min_height'],
+              0,
+            ],
+            'fill-extrusion-opacity': 0.95,
+          },
         });
-      });
-    };
+      }
 
-    initializeMapComponent();
+      // Once base configurations and cached layers are ready, lift the vector layer lock state
+      map.once('idle', () => {
+        onMapLoaded(map);
+      });
+    });
 
     return () => {
-      if (map) {
-        import('../plugins/userLocation.plugin').then(
-          ({ userLocationPlugin }) => {
-            userLocationPlugin._isControlAdded = false;
-          },
-        );
-        mapEngine.destroy();
-        mapRef.current = null;
-      }
+      userLocationPlugin.reset();
+      mapEngine.destroy();
+      mapRef.current = null;
     };
   }, [containerRef, onLocationReady, onMapLoaded]);
 
