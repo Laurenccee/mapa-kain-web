@@ -3,108 +3,60 @@ import type { MapPlugin } from '../types';
 import { MAPS } from '@/utils/constants/maps';
 
 interface ExtendedMapPlugin extends MapPlugin {
+  _onLocationResolvedCallback: (() => void) | null;
+  _hasFreshCache: boolean;
+  _isControlAdded: boolean; // 🟢 Prevents duplicate controls from rendering
   initLocation: (map: maplibregl.Map, onLocationResolved: () => void) => void;
 }
 
 export const userLocationPlugin: ExtendedMapPlugin = {
   name: 'user-location',
+  _onLocationResolvedCallback: null,
+  _hasFreshCache: false,
+  _isControlAdded: false,
 
-  // 📡 Phase 1: Runs IMMEDIATELY when the map engine starts (Pre-style load execution)
   initLocation(map, onLocationResolved) {
-    let coordinatesSet = false;
+    this._onLocationResolvedCallback = onLocationResolved;
 
-    // 1. Try to read from cache instantly so the initial frame matches your area right away
     const cached = localStorage.getItem(MAPS.CACHE_KEY);
-    let backupLng: number | null = null;
-    let backupLat: number | null = null;
-
     if (cached) {
       try {
         const { lng, lat, timestamp } = JSON.parse(cached);
-        backupLng = lng;
-        backupLat = lat;
-
         const isExpired = Date.now() - timestamp > MAPS.ONE_DAY;
 
         if (!isExpired) {
           map.jumpTo({ center: [lng, lat], zoom: 17 });
-          coordinatesSet = true;
-          onLocationResolved(); // 🟢 Dismiss loader instantly!
+          this._hasFreshCache = true;
+          // Note: We deliberately wait for the map rendering loop
+          // to settle completely before dismissing the loading state.
         }
       } catch (e) {
         console.error('Failed reading cached coordinates:', e);
       }
     }
-
-    // 2. Request precision coordinates concurrently in the background
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { longitude, latitude } = position.coords;
-
-          localStorage.setItem(
-            MAPS.CACHE_KEY,
-            JSON.stringify({
-              lng: longitude,
-              lat: latitude,
-              timestamp: Date.now(),
-            }),
-          );
-
-          if (!coordinatesSet) {
-            map.jumpTo({ center: [longitude, latitude], zoom: 17 });
-            onLocationResolved();
-          }
-        },
-        (error) => {
-          console.warn(
-            'Hardware location retrieval failed. Falling back.',
-            error,
-          );
-          if (!coordinatesSet) {
-            if (backupLng && backupLat) {
-              map.jumpTo({ center: [backupLng, backupLat], zoom: 17 });
-            } else {
-              map.jumpTo({ center: MAPS.FALLBACK_PHILIPPINES, zoom: 17 });
-            }
-            onLocationResolved();
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 30000, // 🟢 OPTIMIZATION: Pull instant location from system cache if less than 30s old
-        },
-      );
-    } else if (!coordinatesSet) {
-      map.jumpTo({ center: MAPS.FALLBACK_PHILIPPINES, zoom: 17 });
-      onLocationResolved();
-    }
   },
 
-  // 🧭 Phase 2: Runs when style is ready. Mounts UI components and hooks event handlers
   onAdd(map) {
+    // 🟢 Guard clause stops duplication across style updates
+    if (this._isControlAdded) return;
+    this._isControlAdded = true;
+
     const geoControl = new maplibregl.GeolocateControl({
       trackUserLocation: true,
       showUserLocation: true,
       fitBoundsOptions: { maxZoom: 17 },
       positionOptions: {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000,
+        timeout: 15000,
+        maximumAge: 0,
       },
     });
 
-    map.addControl(geoControl);
-
-    setTimeout(() => {
-      if (map.getContainer()) {
-        geoControl.trigger();
-      }
-    }, 0);
+    map.addControl(geoControl, 'bottom-right');
 
     geoControl.on('geolocate', (e: any) => {
       if (!e?.coords) return;
+
       localStorage.setItem(
         MAPS.CACHE_KEY,
         JSON.stringify({
@@ -113,6 +65,26 @@ export const userLocationPlugin: ExtendedMapPlugin = {
           timestamp: Date.now(),
         }),
       );
+
+      // ⚡ Lift the loading overlay screen now that the GPS blue dot is active
+      if (this._onLocationResolvedCallback) {
+        this._onLocationResolvedCallback();
+      }
     });
+
+    // 🟢 FIX: Wrap in a timeout execution frame so MapLibre can register
+    // the control's internal layout nodes before we trigger it.
+    setTimeout(() => {
+      if (map.getContainer() && geoControl) {
+        try {
+          geoControl.trigger();
+        } catch (err) {
+          console.warn(
+            'Geolocation track deferred during initialization:',
+            err,
+          );
+        }
+      }
+    }, 50);
   },
 };

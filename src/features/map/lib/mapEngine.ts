@@ -5,6 +5,7 @@ class MapEngine {
   private static instance: MapEngine;
   private map: maplibregl.Map | null = null;
   private plugins: MapPlugin[] = [];
+  private CACHE_NAME = 'maplibre-assets-v1';
 
   static getInstance() {
     if (!MapEngine.instance) {
@@ -14,7 +15,14 @@ class MapEngine {
   }
 
   init(container: HTMLDivElement, options: any) {
-    if (this.map) return this.map;
+    // 🟢 FIX: If an instance exists but the container changes, cleanly tear down the stale reference
+    if (this.map) {
+      if (this.map.getContainer() === container) {
+        return this.map;
+      } else {
+        this.destroy();
+      }
+    }
 
     this.map = new maplibregl.Map({
       container,
@@ -25,9 +33,10 @@ class MapEngine {
       bearing: options.bearing ?? -15,
       maxPitch: 85,
       attributionControl: false,
+      transformRequest: options.transformRequest, // 🟢 FIXED: Forward interceptor options
     });
 
-    this.map.on('load', () => {
+    this.map.on('styledata', () => {
       this.plugins.forEach((p) => p.onAdd(this.map!));
     });
 
@@ -35,9 +44,10 @@ class MapEngine {
   }
 
   registerPlugin(plugin: MapPlugin) {
-    this.plugins.push(plugin);
-
-    // if map already exists, attach immediately
+    const exists = this.plugins.some((p) => p.name === plugin.name);
+    if (!exists) {
+      this.plugins.push(plugin);
+    }
     if (this.map) {
       plugin.onAdd(this.map);
     }
@@ -48,11 +58,15 @@ class MapEngine {
   }
 
   destroy() {
+    // 🟢 FIXED: Centralized clean-up handler resets internal singleton properties completely
     if (this.map) {
-      this.plugins.forEach((p) => p.onRemove?.(this.map!));
-      this.map.remove();
+      try {
+        this.plugins.forEach((p) => p.onRemove?.(this.map!));
+        this.map.remove();
+      } catch (e) {
+        console.error('Error removing map instance:', e);
+      }
     }
-
     this.map = null;
     this.plugins = [];
   }

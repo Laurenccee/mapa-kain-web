@@ -67,7 +67,12 @@ export const buildingSelectionPlugin: MapPlugin = {
         map.setFilter('3d-buildings-highlighted', [
           'all',
           ['==', ['id'], feature.id],
-          ['==', ['get', 'render_height'], renderHeight],
+          // 🟢 Wrap ['get'] inside a coalesce block to enforce fallback type typing safety
+          [
+            '==',
+            ['number', ['coalesce', ['get', 'render_height'], 0]],
+            renderHeight,
+          ],
         ]);
 
         console.log('🏢 Isolated building selected:', feature.properties);
