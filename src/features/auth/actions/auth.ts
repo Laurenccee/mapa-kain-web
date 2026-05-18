@@ -10,6 +10,8 @@ import {
   SignUpData,
   SignUpSchema,
 } from '../schemas/authSchema';
+import { redirect } from 'next/navigation';
+import { ROUTES } from '@/utils/constants/routes';
 
 export async function signInAction(values: SignInData) {
   const validatedFields = SignInSchema.safeParse(values);

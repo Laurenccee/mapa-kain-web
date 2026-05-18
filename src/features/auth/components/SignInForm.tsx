@@ -43,7 +43,7 @@ export default function SignInForm() {
           return;
         }
         toast.success('Signed in successfully!');
-        router.replace(ROUTES.ROOT);
+        router.replace(ROUTES.MAP);
       } catch (error) {
         toast.error('An error occurred during sign in.');
       }

@@ -7,6 +7,7 @@ import { signOutAction } from '@/features/auth/actions/auth';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loader, Logout01Icon } from '@hugeicons/core-free-icons';
+import { ROUTES } from '@/utils/constants/routes';
 
 export default function SignOutButton() {
   const [isPending, startTransition] = useTransition();
@@ -23,7 +24,7 @@ export default function SignOutButton() {
           return;
         }
         toast.success('Signed out');
-        router.refresh();
+        router.replace(ROUTES.ROOT);
       } catch {
         toast.error('An unexpected error occurred');
       }
