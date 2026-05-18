@@ -3,7 +3,6 @@ import maplibregl from 'maplibre-gl';
 import { mapEngine } from '../lib/mapEngine';
 import { MAPS } from '@/utils/constants/maps';
 import { buildingSelectionPlugin } from '../plugins/buildingSelection.plugin';
-import { hoverPlugin } from '../plugins/hover.plugin';
 import { userLocationPlugin } from '../plugins/userLocation.plugin';
 
 export function useMaplibreMap(
@@ -36,7 +35,6 @@ export function useMaplibreMap(
     userLocationPlugin.initLocation(onLocationReady);
     mapEngine.registerPlugin(userLocationPlugin);
     mapEngine.registerPlugin(buildingSelectionPlugin);
-    mapEngine.registerPlugin(hoverPlugin);
 
     const map = mapEngine.init(containerRef.current, {
       style,
@@ -65,7 +63,12 @@ export function useMaplibreMap(
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
-            'fill-extrusion-color': isDark ? '#343a40' : '#cbd5e1',
+            'fill-extrusion-color': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false],
+              '#3b82f6',
+              isDark ? '#343a40' : '#cbd5e1',
+            ],
             'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
             'fill-extrusion-base': [
               'coalesce',
@@ -73,27 +76,6 @@ export function useMaplibreMap(
               0,
             ],
             'fill-extrusion-opacity': 0.85,
-          },
-        });
-      }
-
-      if (!map.getLayer('3d-buildings-highlighted')) {
-        map.addLayer({
-          id: '3d-buildings-highlighted',
-          source: 'openmaptiles',
-          'source-layer': 'building',
-          type: 'fill-extrusion',
-          minzoom: 14,
-          filter: ['==', ['id'], ''],
-          paint: {
-            'fill-extrusion-color': '#3b82f6',
-            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
-            'fill-extrusion-base': [
-              'coalesce',
-              ['get', 'render_min_height'],
-              0,
-            ],
-            'fill-extrusion-opacity': 0.95,
           },
         });
       }
