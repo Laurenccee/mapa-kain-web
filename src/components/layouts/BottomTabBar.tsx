@@ -69,7 +69,7 @@ export default function BottomTabBar() {
         </nav>
 
         {/* QR Code Action Tab */}
-        <nav className="flex aspect-square items-center justify-center p-2 h-full min-h-14.5 sm:min-h-16.5 rounded-lg border border-border bg-primary transition-transform">
+        <nav className="flex aspect-square items-center justify-center p-2 h-full min-h-14.5 sm:min-h-16.5 rounded-lg bg-primary transition-transform">
           <Link href={hasEstablishment ? '/scan' : '/my-qr'} className="">
             <HugeiconsIcon
               icon={QrCode01Icon}

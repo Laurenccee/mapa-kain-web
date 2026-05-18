@@ -5,22 +5,10 @@ import type { Polygon, MultiPolygon, Feature, Position } from 'geojson';
 import type maplibregl from 'maplibre-gl';
 import { shoelaceArea } from '../utils/shoulaceArea';
 
-/**
- * Building Selection Plugin
- *
- * Owns its own source + layer setup so initialization order is guaranteed:
- * mapEngine calls onAdd(map) after 'load', so sources/layers are added here
- * in the same synchronous call — no race condition with the hook's load listener.
- */
 export const buildingSelectionPlugin: MapPlugin = {
   name: 'building-selection',
 
   onAdd(map) {
-    // ── Own source & layer setup ─────────────────────────────────────────────
-    // These MUST live here, not in useMapLibreMap, because mapEngine.applyPlugins()
-    // and the hook's map.once('load') race each other. The plugin's onAdd wins,
-    // so we set up everything we need right here, synchronously.
-
     if (!map.getSource('selected-building')) {
       map.addSource('selected-building', {
         type: 'geojson',

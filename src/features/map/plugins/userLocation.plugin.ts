@@ -1,14 +1,6 @@
 import maplibregl from 'maplibre-gl';
-import type { MapPlugin } from '../types';
+import type { LocationPluginInterface, MapPlugin } from '../types';
 import { MAPS } from '@/utils/constants/maps';
-
-interface LocationPluginInterface extends MapPlugin {
-  _callback: (() => void) | null;
-  _isControlAdded: boolean;
-  _hasFreshCache: boolean; // 🟢 Track if we bypassed via local storage cache
-  initLocation: (onLocationResolved: () => void) => void;
-  reset: () => void;
-}
 
 export const userLocationPlugin: LocationPluginInterface = {
   name: 'user-location',

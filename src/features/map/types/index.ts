@@ -1,16 +1,5 @@
 import type { Polygon, Feature } from 'geojson';
 
-export interface CachedLocation {
-  lng: number;
-  lat: number;
-  timestamp: number;
-}
-
-export interface BuildingSelection {
-  featureId: string | number | null;
-  building: Feature<Polygon>;
-}
-
 export interface MapPlugin {
   name: string;
 
@@ -18,9 +7,10 @@ export interface MapPlugin {
   onRemove?: (map: maplibregl.Map) => void;
 }
 
-export type GeoEvent = {
-  coords?: {
-    longitude: number;
-    latitude: number;
-  };
-};
+export interface LocationPluginInterface extends MapPlugin {
+  _callback: (() => void) | null;
+  _isControlAdded: boolean;
+  _hasFreshCache: boolean; // 🟢 Track if we bypassed via local storage cache
+  initLocation: (onLocationResolved: () => void) => void;
+  reset: () => void;
+}
