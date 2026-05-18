@@ -11,4 +11,5 @@ export const ROUTES = {
 
   MAP: '/map',
   FEED: '/feed',
+  USER: (id: string) => `/user/${id}` as const,
 };

@@ -6,7 +6,7 @@ export default function Feed() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="space-y-6 pb-20">
+    <main className="space-y-6 pb-20">
       {/* 1. Near You Section - Visible to All */}
       {/* <NearYouSection /> */}
 
@@ -22,6 +22,6 @@ export default function Feed() {
           <FavoritesTeaser />
         )} */}
       </div>
-    </div>
+    </main>
   );
 }

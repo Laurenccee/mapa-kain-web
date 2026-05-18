@@ -20,19 +20,18 @@ const publicNavs = [
 
 export default function BottomTabBar() {
   const pathname = usePathname();
-  const { hasEstablishment, isAuthenticated } = useAuth();
+  const { hasEstablishment, isAuthenticated, userId } = useAuth();
 
   const visibleNavItems = [
     ...publicNavs,
     ...(isAuthenticated
-      ? [{ name: 'Profile', href: ROUTES.PROFILE_SETUP, icon: UserIcon }]
+      ? [{ name: 'Profile', href: ROUTES.USER(userId || ''), icon: UserIcon }]
       : []),
   ];
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 w-full max-w-sm sm:max-w-md flex items-center -translate-x-1/2 px-4">
       <div className="flex items-center gap-2 sm:gap-4 justify-center w-full">
-        {/* Main Navigation Tab */}
         <nav className="flex flex-3 gap-1 items-center justify-between rounded-xl border border-border bg-card backdrop-blur-xl p-1.5">
           {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;

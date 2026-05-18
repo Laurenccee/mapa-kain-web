@@ -3,8 +3,8 @@ import MapDisplay from '@/features/map/components/MapDisplay';
 
 export default function MapPage() {
   return (
-    <main className="h-full w-full">
+    <section className="h-full w-full">
       <MapDisplay />
-    </main>
+    </section>
   );
 }

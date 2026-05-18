@@ -17,7 +17,9 @@ export function useAuth() {
     hasProfile: !!context.profile,
     hasEstablishment: !!context.establishment,
 
-    user: context.user,
     userId: context.user?.id,
+
+    profile: context.profile,
+    establishment: context.establishment,
   };
 }
