@@ -14,7 +14,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const qrEngineRef = useRef<Html5Qrcode | null>(null);
 
-  // 1. Detect Desktop vs Mobile
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 1024);
@@ -24,9 +23,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2. Initialize and Start Fullscreen Camera Engine
-  // 2. Initialize and Start Fullscreen Camera Engine
-  // 2. Initialize and Start Fullscreen Camera Engine
   useEffect(() => {
     if (isDesktop === null || isDesktop) return;
 
@@ -40,32 +36,25 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         (decodedText) => {
           onScanSuccess(decodedText);
         },
-        () => {
-          /* Ignore frame updates */
-        },
+        () => {},
       )
       .catch((err) => {
         console.error('Camera initialization failed:', err);
         setCameraError('Could not access the rear camera.');
       });
 
-    // FIX: Isolated asynchronous cleanup handler
     return () => {
       if (qrEngineRef.current) {
         const provider = qrEngineRef.current;
 
-        // Check if it's currently actively streaming
         if (provider.isScanning) {
           provider
             .stop()
             .then(() => {
-              // Give React a clear event loop tick to let the DOM settle
-              // before clearing out internal references
               setTimeout(() => {
                 try {
                   provider.clear();
                 } catch (e) {
-                  // Catch silent race conditions during hot-reload
                   console.debug('Scanner container cleared safely.', e);
                 }
               }, 0);
@@ -131,10 +120,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         </>
       )}
 
-      {/* Pure fullscreen layout. 
-        Because we switched to the raw engine, there are zero weird library wrappers,
-        zero white borders, and the video element stretches perfectly to fill the device screen.
-      */}
       <div
         id="qr-reader-target"
         className="w-full h-full [&_video]:w-full! [&_video]:h-full! [&_video]:object-cover"
