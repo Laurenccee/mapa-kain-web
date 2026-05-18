@@ -10,7 +10,7 @@ export default async function MyQrPage() {
   const qrSvgMarkup = await generateUserQrCode({ userId: user?.id });
 
   return (
-    <section className="flex flex-1 justify-center items-center w-full px-4 flex-col gap-8">
+    <section className="flex flex-1 justify-center items-center w-full px-8 flex-col gap-8">
       <div className="sm:max-w-xs w-full flex flex-col gap-8">
         <Card>
           <CardContent className="flex justify-center items-center">
