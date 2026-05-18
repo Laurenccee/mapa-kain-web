@@ -57,6 +57,7 @@ export async function signInAction(values: SignInData) {
   revalidatePath('/', 'layout');
   return { success: true };
 }
+
 export async function signUpAction(values: SignUpData) {
   const validatedFields = SignUpSchema.safeParse(values);
   if (!validatedFields.success) {

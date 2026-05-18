@@ -54,7 +54,9 @@ export async function updateSession(request: NextRequest) {
     ROUTES.EMAIL_VERIFICATION,
   ];
 
-  const PUBLIC_ROUTES = [ROUTES.MAP];
+  const PUBLIC_ROUTES = [ROUTES.MAP, ROUTES.FEED];
+
+  const PROTECTED_ROUTES = [ROUTES.PROFILE_SETUP, ROUTES.QR_SCAN, ROUTES.MY_QR];
 
   if (!user) {
     if (!AUTH_ROUTES.includes(path) && !PUBLIC_ROUTES.includes(path)) {

@@ -5,6 +5,10 @@ export const ROUTES = {
   FORGET_PASSWORD: '/forget-password',
   EMAIL_VERIFICATION: '/email-verification',
 
-  MAP: '/map',
   PROFILE_SETUP: '/profile/setup',
+  QR_SCAN: '/qr-scan',
+  MY_QR: '/my-qr',
+
+  MAP: '/map',
+  FEED: '/feed',
 };
