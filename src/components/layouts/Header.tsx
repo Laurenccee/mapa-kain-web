@@ -8,6 +8,7 @@ import { ThemeToggle } from '../shared/ThemeToggle';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { ROUTES } from '@/utils/constants/routes';
+import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
   className?: string;
@@ -15,11 +16,17 @@ interface HeaderProps {
 
 export default function Header({ className }: HeaderProps) {
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+
+  const isMapPage = pathname === '/map';
 
   return (
     <header
       className={cn(
-        'fixed w-full top-0 left-0 right-0 z-50 h-16 px-4 md:px-6 py-3 bg-transparent',
+        isMapPage
+          ? 'fixed bg-transparent border-b-border'
+          : 'sticky bg-card border-b-border',
+        'w-full top-0 left-0 right-0 z-50 h-16 px-4 md:px-6 py-3',
         className,
       )}
     >

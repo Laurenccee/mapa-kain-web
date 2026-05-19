@@ -9,11 +9,11 @@ export default function PublicLayout({
 }) {
   return (
     // h-screen prevents the whole page from scrolling
-    <div className="relative h-screen w-full flex flex-col bg-background overflow-hidden">
+    <div className="relative h-screen w-full flex flex-col bg-background">
       <Header />
 
       {/* flex-1 makes this container grow to fill all available space */}
-      <main className="flex-1 relative">{children}</main>
+      <main className="flex-1">{children}</main>
 
       <BottomTabBar />
     </div>

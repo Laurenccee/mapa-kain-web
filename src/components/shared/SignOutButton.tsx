@@ -6,10 +6,21 @@ import { useRouter } from 'next/navigation';
 import { signOutAction } from '@/features/auth/actions/auth';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Loader, Logout01Icon } from '@hugeicons/core-free-icons';
+import { Loader, Logout01Icon, Sign } from '@hugeicons/core-free-icons';
 import { ROUTES } from '@/utils/constants/routes';
+import { cn } from '@/lib/utils';
 
-export default function SignOutButton() {
+interface SignOutButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'secondary' | 'outline' | 'ghost' | 'link' | 'default';
+  size?: 'lg' | 'icon-lg';
+  className?: string;
+}
+
+export default function SignOutButton({
+  variant = 'secondary',
+  size = 'icon-lg',
+  className,
+}: SignOutButtonProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -34,13 +45,26 @@ export default function SignOutButton() {
     <Button
       onClick={handleSignOut}
       disabled={isPending}
-      size="icon-lg"
-      variant="secondary"
+      size={size}
+      variant={variant}
+      className={cn(size !== 'icon-lg' && 'w-full', className)}
     >
-      {isPending ? (
-        <HugeiconsIcon icon={Loader} className="animate-spin" />
+      {size === 'icon-lg' ? (
+        isPending ? (
+          <HugeiconsIcon icon={Loader} className="animate-spin" />
+        ) : (
+          <HugeiconsIcon icon={Logout01Icon} />
+        )
+      ) : isPending ? (
+        <>
+          Signing Out...
+          <HugeiconsIcon icon={Loader} className="animate-spin" />
+        </>
       ) : (
-        <HugeiconsIcon icon={Logout01Icon} />
+        <>
+          Sign Out
+          <HugeiconsIcon icon={Logout01Icon} />
+        </>
       )}
     </Button>
   );

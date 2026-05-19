@@ -44,10 +44,14 @@ export default function AuthProvider({
                 .eq('id', session.user.id)
                 .single(),
               supabase
-                .from('establishments')
-                .select('*')
-                .eq('owner_id', session.user.id)
-                .single(),
+                .from('stores')
+                .select(
+                  `
+                  *,
+                  store_members!inner(user_id)
+                `,
+                )
+                .eq('store_members.user_id', session.user.id),
             ]);
 
             setState({

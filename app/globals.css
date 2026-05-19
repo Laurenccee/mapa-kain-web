@@ -114,6 +114,10 @@ body {
   font-family: var(--font-serif), serif;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 .dark {
   --background: oklch(0.18 0.005 161.74);
   --foreground: oklch(0.9532 0.01 161.74);
