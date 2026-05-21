@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Controller } from 'react-hook-form';
-import { Field, FieldDescription, FieldError, FieldLabel } from '../ui/field';
+import React, { useState } from "react";
+import { Controller } from "react-hook-form";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
   InputGroupButton,
-} from '../ui/input-group';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
-import { ROUTES } from '@/utils/constants/routes';
-import Link from 'next/link';
+} from "../ui/input-group";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
+import { ROUTES } from "@/utils/constants/routes";
+import Link from "next/link";
 
 interface InputFieldProps {
   name: string;
@@ -34,7 +34,7 @@ export default function InputField({
   label,
   control,
   isPending = false,
-  type = 'text',
+  type = "text",
   leadingIcon,
   trailingIcon,
   description,
@@ -43,7 +43,7 @@ export default function InputField({
   ...rest
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const isPassword = type === 'password';
+  const isPassword = type === "password";
 
   return (
     <Controller
@@ -51,7 +51,7 @@ export default function InputField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <div className="flex justify-between text-accent-foreground">
+          <div className="text-accent-foreground flex justify-between">
             {label && (
               <FieldLabel className="text-sm sm:text-sm" htmlFor={field.name}>
                 {label}
@@ -60,18 +60,18 @@ export default function InputField({
             {isPassword && forgetPasswordLink && (
               <Link
                 href={ROUTES.FORGET_PASSWORD}
-                className="text-sm hover:text-foreground hover:underline"
+                className="hover:text-foreground text-sm hover:underline"
               >
                 Forgot password?
               </Link>
             )}
           </div>
 
-          <InputGroup className="transition-all ">
+          <InputGroup className="transition-all">
             <InputGroupInput
               {...field}
-              type={isPassword && showPassword ? 'text' : type}
-              autoComplete={isPassword ? 'current-password' : undefined}
+              type={isPassword && showPassword ? "text" : type}
+              autoComplete={isPassword ? "current-password" : undefined}
               placeholder={rest.placeholder}
               disabled={isPending}
               className="placeholder:text-muted-foreground tracking-wide"
@@ -87,7 +87,7 @@ export default function InputField({
                 <InputGroupButton
                   type="button"
                   tabIndex={-1}
-                  className="hover:bg-transparent pr-0.5"
+                  className="pr-0.5 hover:bg-transparent"
                   onClick={() => setShowPassword((v) => !v)}
                 >
                   {showPassword ? (
@@ -118,12 +118,12 @@ export default function InputField({
           </InputGroup>
 
           {description && (
-            <FieldDescription className="text-xs tracking-[0.2em] text-muted-foreground">
+            <FieldDescription className="text-muted-foreground text-xs tracking-[0.2em]">
               {description}
             </FieldDescription>
           )}
           {error && (
-            <FieldError className="text-xs text-red-500 font-semibold font-mono tracking-[0.2em]">
+            <FieldError className="font-mono text-xs font-semibold tracking-[0.2em] text-red-500">
               {error}
             </FieldError>
           )}

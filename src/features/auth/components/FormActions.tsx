@@ -1,6 +1,6 @@
-import { Checkbox } from '@/components/ui/checkbox';
-import { ROUTES } from '@/utils/constants/routes';
-import Link from 'next/link';
+import { Checkbox } from "@/components/ui/checkbox";
+import { ROUTES } from "@/utils/constants/routes";
+import Link from "next/link";
 
 interface FormActionsProps {
   rememberMe: boolean;
@@ -18,12 +18,12 @@ export default function FormActions({
           checked={rememberMe}
           onCheckedChange={(checked) => onRememberMeChange(checked === true)}
         />
-        <span className="text-sm text-accent-foreground ml-2">Remember me</span>
+        <span className="text-accent-foreground ml-2 text-sm">Remember me</span>
       </div>
       <div>
         <Link
           href={ROUTES.FORGET_PASSWORD}
-          className="text-sm text-foreground hover:underline"
+          className="text-foreground text-sm hover:underline"
         >
           Forgot your password?
         </Link>

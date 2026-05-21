@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import InputField from '@/components/shared/InputField';
-import { Button } from '@/components/ui/button';
-import { SignInData, SignInSchema } from '../schemas/authSchema';
+import InputField from "@/components/shared/InputField";
+import { Button } from "@/components/ui/button";
+import { SignInData, SignInSchema } from "../schemas/authSchema";
 
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTransition } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight02Icon,
   Loading02Icon,
   LockPasswordIcon,
   User03Icon,
-} from '@hugeicons/core-free-icons';
-import { signInAction } from '../actions/auth';
-import { toast } from 'sonner';
-import FormActions from './FormActions';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/utils/constants/routes';
+} from "@hugeicons/core-free-icons";
+import { signInAction } from "../actions/auth";
+import { toast } from "sonner";
+import FormActions from "./FormActions";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/utils/constants/routes";
 
 export default function SignInForm() {
   const [isPending, startTransistion] = useTransition();
@@ -27,8 +27,8 @@ export default function SignInForm() {
   const { control, handleSubmit, watch, setValue } = useForm<SignInData>({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
       rememberMe: false,
     },
   });
@@ -39,13 +39,13 @@ export default function SignInForm() {
         const result = await signInAction(data);
 
         if (result?.success === false) {
-          toast.error(result.message || 'An error occurred during sign in.');
+          toast.error(result.message || "An error occurred during sign in.");
           return;
         }
-        toast.success('Signed in successfully!');
+        toast.success("Signed in successfully!");
         router.replace(ROUTES.MAP);
       } catch (error) {
-        toast.error('An error occurred during sign in.');
+        toast.error("An error occurred during sign in.");
       }
     });
   };
@@ -89,8 +89,8 @@ export default function SignInForm() {
         />
       </div>
       <FormActions
-        rememberMe={watch('rememberMe')}
-        onRememberMeChange={(val) => setValue('rememberMe', val)}
+        rememberMe={watch("rememberMe")}
+        onRememberMeChange={(val) => setValue("rememberMe", val)}
       />
       <Button
         form="sign-in-form"
@@ -98,7 +98,7 @@ export default function SignInForm() {
         className="w-full"
         disabled={isPending}
       >
-        {isPending ? 'Signing in...' : 'Sign in to your account'}
+        {isPending ? "Signing in..." : "Sign in to your account"}
         {isPending ? (
           <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (

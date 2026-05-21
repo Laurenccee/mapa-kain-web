@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import InputField from '@/components/shared/InputField';
-import { Button } from '@/components/ui/button';
-import { SignUpData, SignUpSchema } from '../schemas/authSchema';
+import InputField from "@/components/shared/InputField";
+import { Button } from "@/components/ui/button";
+import { SignUpData, SignUpSchema } from "../schemas/authSchema";
 
-import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTransition } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight02Icon,
   Loading02Icon,
   LockPasswordIcon,
   User03Icon,
-} from '@hugeicons/core-free-icons';
-import { toast } from 'sonner';
-import { signUpAction } from '../actions/auth';
-import PasswordRulesCard from './PasswordRuleCard';
-import { ROUTES } from '@/utils/constants/routes';
-import { useRouter } from 'next/navigation';
+} from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
+import { signUpAction } from "../actions/auth";
+import PasswordRulesCard from "./PasswordRuleCard";
+import { ROUTES } from "@/utils/constants/routes";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
   const [isPending, startTransistion] = useTransition();
@@ -27,8 +27,8 @@ export default function SignUpForm() {
   const { control, handleSubmit } = useForm<SignUpData>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
@@ -38,18 +38,18 @@ export default function SignUpForm() {
         const result = await signUpAction(data);
 
         if (result?.success === false) {
-          toast.error(result.message || 'An error occurred during sign in.');
+          toast.error(result.message || "An error occurred during sign in.");
           return;
         }
-        toast.success('Account created successfully!');
+        toast.success("Account created successfully!");
         router.replace(ROUTES.SIGN_IN);
       } catch (error) {
-        toast.error('An error occurred during sign up.');
+        toast.error("An error occurred during sign up.");
       }
     });
   };
 
-  const passwordValue = useWatch({ control, name: 'password' }) || '';
+  const passwordValue = useWatch({ control, name: "password" }) || "";
 
   return (
     <form
@@ -97,7 +97,7 @@ export default function SignUpForm() {
         className="w-full"
         disabled={isPending}
       >
-        {isPending ? 'Creating Account...' : 'Create Account'}
+        {isPending ? "Creating Account..." : "Create Account"}
         {isPending ? (
           <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (

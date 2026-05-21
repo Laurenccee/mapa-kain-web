@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface PasswordRulesProps {
   password: string;
@@ -14,10 +14,10 @@ export default function PasswordRulesCard({ password }: PasswordRulesProps) {
   };
 
   return (
-    <Card className="ring-transparent rounded-md">
+    <Card className="rounded-md ring-transparent">
       <CardContent className="flex flex-col gap-2">
         <span className="text-sm">Your password must contain:</span>
-        <div className="flex mx-2 flex-col">
+        <div className="mx-2 flex flex-col">
           <RuleItem label="At least 8 characters long" isMet={rules.minLen} />
           <RuleItem
             label="At least one uppercase letter"
@@ -38,7 +38,7 @@ function RuleItem({ label, isMet }: { label: string; isMet: boolean }) {
   return (
     <label className="flex items-center gap-2 text-sm transition-colors duration-200 select-none">
       <Checkbox checked={isMet} disabled className={`pointer-events-none`} />
-      <span className={isMet ? 'text-foreground' : 'text-muted-foreground'}>
+      <span className={isMet ? "text-foreground" : "text-muted-foreground"}>
         {label}
       </span>
     </label>

@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import InputField from '@/components/shared/InputField';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft02Icon, Email, User03Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { useTransition } from 'react';
+import InputField from "@/components/shared/InputField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft02Icon, Email, User03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTransition } from "react";
 import {
   ForgetPasswordData,
   ForgetPasswordSchema,
-} from '../schemas/authSchema';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { forgetPasswordAction } from '../actions/auth';
+} from "../schemas/authSchema";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { forgetPasswordAction } from "../actions/auth";
 
 export default function ForgetPasswordForm() {
   const [isPending, startTransistion] = useTransition();
@@ -20,7 +20,7 @@ export default function ForgetPasswordForm() {
   const { control, handleSubmit } = useForm<ForgetPasswordData>({
     resolver: zodResolver(ForgetPasswordSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
@@ -32,14 +32,14 @@ export default function ForgetPasswordForm() {
         const result = await forgetPasswordAction(data);
 
         if (result?.success === false) {
-          toast.error(result.message || 'An error occurred.');
+          toast.error(result.message || "An error occurred.");
           return;
         }
         toast.success(
           `Check your inbox! If an account exists for ${data.email}, you'll find a reset link there.`,
         );
       } catch (error) {
-        toast.error('An error occurred during password reset.');
+        toast.error("An error occurred during password reset.");
       }
     });
   };

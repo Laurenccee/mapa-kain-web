@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/features/auth/hooks/use-auth';
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 export default function Feed() {
   const { isAuthenticated } = useAuth();
@@ -15,7 +15,7 @@ export default function Feed() {
 
       {/* 3. Favorites Section - Context Gated */}
       <div className="px-4">
-        <h3 className="font-serif text-lg mb-3">My Favorites</h3>
+        <h3 className="mb-3 font-serif text-lg">My Favorites</h3>
         {/* {isAuthenticated ? (
           <FavoritesSection />
         ) : (

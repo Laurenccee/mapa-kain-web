@@ -1,17 +1,17 @@
-import LabeledSeparator from '@/components/shared/LabeledSeparator';
-import OAuthButtons from '@/features/auth/components/OAuthButtons';
-import SignInForm from '@/features/auth/components/SignInForm';
-import Link from 'next/link';
+import LabeledSeparator from "@/components/shared/LabeledSeparator";
+import OAuthButtons from "@/features/auth/components/OAuthButtons";
+import SignInForm from "@/features/auth/components/SignInForm";
+import Link from "next/link";
 
 export default function SignInPage() {
   return (
-    <section className="flex flex-1 justify-center items-center w-full px-4 flex-col gap-8">
-      <div className="sm:max-w-xs w-full flex flex-col gap-8">
+    <section className="flex w-full flex-1 flex-col items-center justify-center gap-8 px-4">
+      <div className="flex w-full flex-col gap-8 sm:max-w-xs">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl underline sm:text-center font-serif text-foreground">
+          <h1 className="text-foreground font-serif text-4xl underline sm:text-center">
             Sign In
           </h1>
-          <p className="text-sm sm:text-center text-accent-foreground">
+          <p className="text-accent-foreground text-sm sm:text-center">
             Welcome back! Please sign in to continue.
           </p>
         </div>
@@ -20,7 +20,7 @@ export default function SignInPage() {
           <LabeledSeparator label="Sign in with" />
           <OAuthButtons />
           <Link href="/sign-up" className="flex justify-center">
-            <span className="text-sm text-foreground hover:underline">
+            <span className="text-foreground text-sm hover:underline">
               Don't have an account? <span className="font-bold">Sign Up</span>
             </span>
           </Link>

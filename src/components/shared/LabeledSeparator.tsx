@@ -1,4 +1,4 @@
-import { Separator } from '../ui/separator';
+import { Separator } from "../ui/separator";
 
 interface LabeledSeparatorProps {
   label: string;
@@ -10,9 +10,9 @@ export default function LabeledSeparator({
   uppercase,
 }: LabeledSeparatorProps) {
   return (
-    <div className="flex items-center gap-2 w-full ">
+    <div className="flex w-full items-center gap-2">
       <Separator className="flex-1" />
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {uppercase ? label.toUpperCase() : label}
       </span>
       <Separator className="flex-1" />

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Button } from '../ui/button';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
-import { useRouter } from 'next/navigation';
+import { Button } from "../ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { useRouter } from "next/navigation";
 
 export default function BackButton() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function BackButton() {
     if (window.history.length > 1) {
       router.back();
     } else {
-      router.replace('/map');
+      router.replace("/map");
     }
   };
   return (
