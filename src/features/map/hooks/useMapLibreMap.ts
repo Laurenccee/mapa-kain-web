@@ -72,9 +72,9 @@ export function useMaplibreMap({
       bearing: -15,
       maxPitch: 85,
       attributionControl: false,
-      transformRequest: (url: string, resourceType?: maplibregl.ResourceType) => {
-        if (resourceType === 'Tile' || resourceType === 'Style') {
-          return { url, credentials: 'same-origin' as const };
+      transformRequest: (url: string) => {
+        if (url === 'https://tiles.openfreemap.org/planet') {
+          return { url: '/api/map-source' };
         }
         return { url };
       },

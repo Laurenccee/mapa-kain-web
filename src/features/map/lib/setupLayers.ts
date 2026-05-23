@@ -40,7 +40,7 @@ export function setupBuildingLayers(map: maplibregl.Map, isDark: boolean) {
       minzoom: 14,
       paint: {
         'fill-extrusion-color': '#10b981',
-        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
+        'fill-extrusion-height': ['+', ['coalesce', ['get', 'render_height'], 15], 0.5],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
         'fill-extrusion-opacity': 0.85,
       },
@@ -63,7 +63,7 @@ export function setupBuildingLayers(map: maplibregl.Map, isDark: boolean) {
       minzoom: 14,
       paint: {
         'fill-extrusion-color': '#f59e0b',
-        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 15],
+        'fill-extrusion-height': ['+', ['coalesce', ['get', 'render_height'], 15], 0.5],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
         'fill-extrusion-opacity': 0.95,
       },
