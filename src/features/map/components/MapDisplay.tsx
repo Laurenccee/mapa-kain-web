@@ -1,14 +1,13 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useRef, useState, useEffect, useCallback } from "react"; // 🟢 Wrapped useCallback
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Loader } from "@hugeicons/core-free-icons";
 
 import { useMaplibreMap } from "../hooks/useMapLibreMap";
 import type maplibregl from "maplibre-gl";
 import { useRouter } from "next/navigation";
-import { claimedBuildingsPlugin } from "../plugins/claimedBuildings.plugin";
 
 export default function MapDisplay() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -24,35 +23,9 @@ export default function MapDisplay() {
     properties: Record<string, any>;
   } | null>(null);
 
-  useEffect(() => {
-    if (!mapInstance || !isLayersReady) return;
-    const handleBuildingSelected = (e: {
-      buildingId: string | number;
-      properties: Record<string, any>;
-    }) => {
-      setSelectedBuilding({
-        id: e.buildingId,
-        properties: e.properties,
-      });
-    };
-    const handleBuildingCleared = () => {
-      setSelectedBuilding(null);
-    };
-    mapInstance.on("building:selected", handleBuildingSelected);
-    mapInstance.on("building:cleared", handleBuildingCleared);
-    return () => {
-      mapInstance.off("building:selected", handleBuildingSelected);
-      mapInstance.off("building:cleared", handleBuildingCleared);
-    };
-  }, [mapInstance, isLayersReady]);
-
   // 🧪 TEST: Mark one building as claimed (remove this once you fetch from DB)
-  useEffect(() => {
-    if (!isLayersReady) return;
-    claimedBuildingsPlugin.setClaimedBuildings([
-      "bld_122.3600069_11.7147727",
-    ]);
-  }, [isLayersReady]);
+  // using useMemo to provide a stable reference so we don't re-trigger hooks endlessly
+  const claimedBuildingIds = useMemo(() => ["bld_122.3600069_11.7147727"], []);
 
   console.log("selectedBuilding", selectedBuilding?.id);
 
@@ -78,8 +51,29 @@ export default function MapDisplay() {
     setIsLayersReady(true);
   }, []);
 
+  const handleBuildingSelected = useCallback(
+    (buildingId: string, properties: Record<string, any>) => {
+      setSelectedBuilding({
+        id: buildingId,
+        properties,
+      });
+    },
+    []
+  );
+
+  const handleBuildingCleared = useCallback(() => {
+    setSelectedBuilding(null);
+  }, []);
+
   // Initialize hook with stable layout references
-  useMaplibreMap(mapContainer, handleLocationReady, handleMapLoaded);
+  useMaplibreMap({
+    containerRef: mapContainer,
+    onLocationReady: handleLocationReady,
+    onMapLoaded: handleMapLoaded,
+    claimedBuildingIds,
+    onBuildingSelected: handleBuildingSelected,
+    onBuildingCleared: handleBuildingCleared,
+  });
 
   // The view remains hidden under a blur shield until both conditions evaluate to true
   const showLoader = !isLocationResolved || !isLayersReady;
