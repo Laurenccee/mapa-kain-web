@@ -4,6 +4,7 @@ import { mapEngine } from '../lib/mapEngine';
 import { MAPS } from '@/utils/constants/maps';
 import { buildingSelectionPlugin } from '../plugins/buildingSelection.plugin';
 import { userLocationPlugin } from '../plugins/userLocation.plugin';
+import { claimedBuildingsPlugin } from '../plugins/claimedBuildings.plugin';
 
 export function useMaplibreMap(
   containerRef: React.RefObject<HTMLDivElement | null>,
@@ -35,6 +36,7 @@ export function useMaplibreMap(
     userLocationPlugin.initLocation(onLocationReady);
     mapEngine.registerPlugin(userLocationPlugin);
     mapEngine.registerPlugin(buildingSelectionPlugin);
+    mapEngine.registerPlugin(claimedBuildingsPlugin);
 
     const map = mapEngine.init(containerRef.current, {
       style,
