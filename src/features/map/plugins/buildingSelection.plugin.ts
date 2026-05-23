@@ -39,6 +39,7 @@ export const buildingSelectionPlugin: MapPlugin = {
 
       const clearSelection = () => {
         selectionSource?.setData({ type: 'FeatureCollection', features: [] });
+        map.fire('building:cleared');
       };
 
       if (!selectionSource) return;
@@ -53,6 +54,7 @@ export const buildingSelectionPlugin: MapPlugin = {
       }
 
       const clicked = point([e.lngLat.lng, e.lngLat.lat]);
+      let bestFeature: any = null;
       let bestRing: Position[] | null = null;
       let bestProperties: Record<string, unknown> | null = null;
       let bestArea = Infinity;
@@ -74,6 +76,7 @@ export const buildingSelectionPlugin: MapPlugin = {
               bestArea = area;
               bestRing = outerRing;
               bestProperties = properties;
+              bestFeature = feature;
             }
           }
         } else if (geometry.type === 'MultiPolygon') {
@@ -93,6 +96,7 @@ export const buildingSelectionPlugin: MapPlugin = {
                 bestArea = area;
                 bestRing = outerRing;
                 bestProperties = properties;
+                bestFeature = feature;
               }
             }
           }
@@ -137,7 +141,17 @@ export const buildingSelectionPlugin: MapPlugin = {
         features: [selectedFeature],
       });
 
+      // Get the unique ID from vector tile feature id, properties.id, or osm_id
+      const buildingId = bestFeature?.id ?? bestProperties?.id ?? bestProperties?.osm_id ?? null;
+
       console.log('🏢 Building selected:', bestProperties);
+      console.log('🆔 Building ID:', buildingId);
+
+      map.fire('building:selected', {
+        buildingId,
+        properties: bestProperties,
+        feature: selectedFeature,
+      });
     };
 
     map.on('click', handleMapClick);
