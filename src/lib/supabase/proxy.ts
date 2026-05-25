@@ -1,6 +1,6 @@
-import { ROUTES } from '@/utils/constants/routes';
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { ROUTES } from "@/utils/constants/routes";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -54,7 +54,12 @@ export async function updateSession(request: NextRequest) {
     ROUTES.EMAIL_VERIFICATION,
   ];
 
-  const PUBLIC_ROUTES = [ROUTES.MAP, ROUTES.FEED];
+  const PUBLIC_ROUTES = [
+    ROUTES.MAP,
+    ROUTES.FEED,
+    ROUTES.MAP_V2,
+    ROUTES.MAP_SOURCE,
+  ];
 
   const PROTECTED_ROUTES = [ROUTES.PROFILE_SETUP, ROUTES.QR_SCAN, ROUTES.MY_QR];
 
@@ -71,9 +76,9 @@ export async function updateSession(request: NextRequest) {
     }
     if (path !== ROUTES.PROFILE_SETUP) {
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
         .single();
 
       if (!profile) {

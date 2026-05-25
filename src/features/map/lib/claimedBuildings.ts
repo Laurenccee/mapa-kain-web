@@ -3,27 +3,17 @@ import type maplibregl from 'maplibre-gl';
 
 /**
  * Scans the current viewport for buildings whose centroid ID
- * matches one of the claimed IDs, and writes their geometry
- * into the 'claimed-buildings-source' GeoJSON source.
+ * matches one of the claimed IDs, and returns their geometries.
  */
-export function updateClaimedBuildings(
+export function queryClaimedBuildings(
   map: maplibregl.Map,
   claimedIds: string[],
-) {
-  if (!map.getLayer('3d-buildings')) return;
-
-  const source = map.getSource('claimed-buildings-source') as
-    | maplibregl.GeoJSONSource
-    | undefined;
-  if (!source) return;
-
-  if (claimedIds.length === 0) {
-    source.setData({ type: 'FeatureCollection', features: [] });
-    return;
-  }
+): Feature<Polygon>[] {
+  if (!map.getLayer('3d-buildings')) return [];
+  if (claimedIds.length === 0) return [];
 
   const features = map.queryRenderedFeatures({ layers: ['3d-buildings'] });
-  if (!features || features.length === 0) return;
+  if (!features || features.length === 0) return [];
 
   const claimedFeatures: Feature<Polygon>[] = [];
   const seenIds = new Set<string>();
@@ -64,5 +54,21 @@ export function updateClaimedBuildings(
     }
   }
 
-  source.setData({ type: 'FeatureCollection', features: claimedFeatures });
+  return claimedFeatures;
+}
+
+/**
+ * Legacy imperative updater: finds claimed buildings, writes to map source.
+ */
+export function updateClaimedBuildings(
+  map: maplibregl.Map,
+  claimedIds: string[],
+) {
+  const source = map.getSource('claimed-buildings-source') as
+    | maplibregl.GeoJSONSource
+    | undefined;
+  if (!source) return;
+
+  const features = queryClaimedBuildings(map, claimedIds);
+  source.setData({ type: 'FeatureCollection', features });
 }

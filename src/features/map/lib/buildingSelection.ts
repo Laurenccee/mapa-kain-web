@@ -11,30 +11,23 @@ export interface BuildingSelectionResult {
 }
 
 /**
- * Finds the smallest building polygon under the click point
- * and writes it to the 'selected-building' GeoJSON source.
- *
+ * Finds the smallest building polygon under the click point.
  * Returns the selection result, or null if nothing was hit.
  */
-export function handleBuildingClick(
+export function queryBuildingAtPoint(
   map: maplibregl.Map,
-  e: maplibregl.MapMouseEvent,
+  pointCoords: { x: number; y: number },
+  lngLat: { lng: number; lat: number },
 ): BuildingSelectionResult | null {
-  const selectionSource = map.getSource('selected-building') as
-    | maplibregl.GeoJSONSource
-    | undefined;
-  if (!selectionSource) return null;
-
-  const features = map.queryRenderedFeatures(e.point, {
+  const features = map.queryRenderedFeatures([pointCoords.x, pointCoords.y], {
     layers: ['3d-buildings'],
   });
 
   if (!features || features.length === 0) {
-    selectionSource.setData({ type: 'FeatureCollection', features: [] });
     return null;
   }
 
-  const clicked = point([e.lngLat.lng, e.lngLat.lat]);
+  const clicked = point([lngLat.lng, lngLat.lat]);
   let bestRing: Position[] | null = null;
   let bestProperties: Record<string, unknown> | null = null;
   let bestArea = Infinity;
@@ -79,7 +72,6 @@ export function handleBuildingClick(
   }
 
   if (!bestRing || !bestProperties) {
-    selectionSource.setData({ type: 'FeatureCollection', features: [] });
     return null;
   }
 
@@ -93,7 +85,6 @@ export function handleBuildingClick(
   });
 
   if (cleanRing.length < 3) {
-    selectionSource.setData({ type: 'FeatureCollection', features: [] });
     return null;
   }
 
@@ -110,11 +101,6 @@ export function handleBuildingClick(
     geometry: { type: 'Polygon', coordinates: [closedRing] },
     properties: bestProperties,
   };
-
-  selectionSource.setData({
-    type: 'FeatureCollection',
-    features: [selectedFeature],
-  });
 
   // Compute centroid-based building ID
   const points = closedRing.slice(0, -1);
@@ -137,7 +123,32 @@ export function handleBuildingClick(
 }
 
 /**
- * Clears the current building selection highlight.
+ * Legacy imperative click handler: Finds building, draws to map source.
+ */
+export function handleBuildingClick(
+  map: maplibregl.Map,
+  e: maplibregl.MapMouseEvent,
+): BuildingSelectionResult | null {
+  const result = queryBuildingAtPoint(map, e.point, e.lngLat);
+  const selectionSource = map.getSource('selected-building') as
+    | maplibregl.GeoJSONSource
+    | undefined;
+
+  if (!result) {
+    selectionSource?.setData({ type: 'FeatureCollection', features: [] });
+    return null;
+  }
+
+  selectionSource?.setData({
+    type: 'FeatureCollection',
+    features: [result.feature],
+  });
+
+  return result;
+}
+
+/**
+ * Legacy imperative selection clearer.
  */
 export function clearBuildingSelection(map: maplibregl.Map) {
   const source = map.getSource('selected-building') as
