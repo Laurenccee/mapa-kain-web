@@ -13,7 +13,7 @@ export function BuildingClaimCard({
   if (!building) return null;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-5 absolute bottom-32 left-1/2 z-30 w-full max-w-sm -translate-x-1/2 px-4 duration-300">
+    <div className="animate-in fade-in slide-in-from-bottom-5 absolute bottom-28 left-1/2 z-30 w-full max-w-sm -translate-x-1/2 px-4 duration-300">
       <div className="bg-background/90 border-border flex flex-col gap-4 rounded-2xl border p-5 shadow-2xl backdrop-blur-md dark:bg-zinc-900/90">
         <div className="flex items-start justify-between">
           <div>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, RefObject } from "react";
+import { useState, useMemo, useCallback, RefObject, useEffect } from "react";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import type { FeatureCollection, Polygon, Feature } from "geojson";
 import { queryBuildingAtPoint } from "../utils/buildingSelection";
@@ -19,7 +19,6 @@ export function useMapLayers(mapRef: RefObject<MapRef | null>) {
     [],
   );
 
-  // Stable reference to backend data mock
   const claimedBuildingIds = useMemo(() => ["bld_122.3600069_11.7147727"], []);
 
   const syncClaimedLayers = useCallback(

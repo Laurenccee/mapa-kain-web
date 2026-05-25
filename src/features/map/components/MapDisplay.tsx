@@ -2,8 +2,8 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useRef, useState, useEffect } from "react";
-import { Map } from "@vis.gl/react-maplibre";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { Layer, Map, Source } from "@vis.gl/react-maplibre";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import { useTheme } from "next-themes";
 
@@ -12,9 +12,12 @@ import { useMapLayers } from "../hooks/useMapLayers";
 import { MapLoader } from "../components/MapLoader";
 import { BuildingClaimCard } from "../components/BuildingClaimCard";
 
-// Your refactored separate files
-import { setupBuildingLayers } from "../utils/setupLayers";
 import { setupGeolocation } from "../utils/geolocation";
+import {
+  getBuildingsLayerConfig,
+  claimedLayerConfig,
+  highlightedLayerConfig, // Make sure this is exported from layerConfigs.ts
+} from "../utils/layerConfigs";
 
 export default function MapDisplay() {
   const mapRef = useRef<MapRef>(null);
@@ -22,6 +25,9 @@ export default function MapDisplay() {
   const [mounted, setMounted] = useState(false);
   const [initialViewState, setInitialViewState] = useState<any | null>(null);
   const [hasCachedLocation, setHasCachedLocation] = useState(false);
+
+  const isDark = mounted ? resolvedTheme === "dark" : false;
+  const mapStyle = isDark ? MAPS.STYLES.dark : MAPS.STYLES.light;
 
   const {
     isLayersReady,
@@ -31,16 +37,19 @@ export default function MapDisplay() {
     handleMoveEnd,
     handleMapClick,
     clearSelection,
+    claimedGeoJson,
+    selectedGeoJson,
   } = useMapLayers(mapRef);
 
-  const isDark = mounted ? resolvedTheme === "dark" : false;
-  const mapStyle = isDark ? MAPS.STYLES.dark : MAPS.STYLES.light;
+  const buildingsLayer = useMemo(
+    () => getBuildingsLayerConfig(isDark),
+    [isDark],
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 1. Pre-fetch location BEFORE rendering the canvas
   useEffect(() => {
     const cached = localStorage.getItem(MAPS.CACHE_KEY);
     if (cached) {
@@ -90,12 +99,7 @@ export default function MapDisplay() {
   }, []);
 
   const handleMapLoad = (e: any) => {
-    const mapInstance = e.target;
-
-    setupBuildingLayers(mapInstance, isDark);
-    setupGeolocation(mapInstance, hasCachedLocation, () => {
-      setIsLayersReady(true);
-    });
+    setupGeolocation(e.target, hasCachedLocation, () => setIsLayersReady(true));
   };
 
   const showLoader = !initialViewState || !isLayersReady;
@@ -116,7 +120,21 @@ export default function MapDisplay() {
           onIdle={handleMapIdle}
           onMoveEnd={handleMoveEnd}
           onClick={handleMapClick}
-        />
+        >
+          <Layer {...buildingsLayer} />
+
+          <Source
+            id="claimed-buildings-source"
+            type="geojson"
+            data={claimedGeoJson}
+          >
+            <Layer {...claimedLayerConfig} />
+          </Source>
+
+          <Source id="selected-building" type="geojson" data={selectedGeoJson}>
+            <Layer {...highlightedLayerConfig} />
+          </Source>
+        </Map>
       )}
 
       <BuildingClaimCard building={selectedBuilding} onClose={clearSelection} />
