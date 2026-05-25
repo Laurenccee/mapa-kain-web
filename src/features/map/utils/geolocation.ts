@@ -13,11 +13,10 @@ export function setupGeolocation(
     trackUserLocation: true,
     showUserLocation: true,
     showAccuracyCircle: true,
-    // ✅ Native animation configuration for cinematic tracking flight
     fitBoundsOptions: {
       maxZoom: 17,
-      linear: false, // Parabolic arc fly curve
-      duration: 2000, // Smooth 2 second animation
+      linear: false,
+      duration: 2000,
     },
     positionOptions: {
       enableHighAccuracy: true,
@@ -28,7 +27,6 @@ export function setupGeolocation(
 
   map.addControl(geoControl, "bottom-right");
 
-  // Trigger tracking state natively right away if location was cached
   if (hasFreshCache) {
     map.on("load", () => {
       geoControl.trigger();
@@ -46,10 +44,6 @@ export function setupGeolocation(
         timestamp: Date.now(),
       }),
     );
-
-    // ❌ REMOVED: manual map.easeTo() / map.flyTo() here
-    // Leaving this empty allows MapLibre's internal tracking loop to handle
-    // the movement smoothly, turning and keeping the button blue natively.
 
     if (!locationResolved) {
       locationResolved = true;

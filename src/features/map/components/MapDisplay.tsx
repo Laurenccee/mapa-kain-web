@@ -68,11 +68,9 @@ export default function MapDisplay() {
           const { longitude, latitude } = position.coords;
           setHasCachedLocation(false);
 
-          // ✅ CRITICAL BLUE BUTTON FIX: Apply micro-offset ONLY on cold starts
-          // to force a vector difference that activates the tracking button state
           setInitialViewState({
             longitude: longitude,
-            latitude: latitude - 0.005,
+            latitude: latitude,
             zoom: 16.5,
             pitch: 55,
             bearing: -15,
@@ -91,13 +89,10 @@ export default function MapDisplay() {
     }
   }, []);
 
-  // ✅ 2. Execute external refactored logic ONLY when the map core is ready
   const handleMapLoad = (e: any) => {
     const mapInstance = e.target;
 
-    // Setup your split-file assets safely
     setupBuildingLayers(mapInstance, isDark);
-
     setupGeolocation(mapInstance, hasCachedLocation, () => {
       setIsLayersReady(true);
     });
@@ -117,7 +112,7 @@ export default function MapDisplay() {
           mapStyle={mapStyle}
           maxPitch={85}
           attributionControl={false}
-          onLoad={handleMapLoad} // 👈 Handshake event with split files
+          onLoad={handleMapLoad}
           onIdle={handleMapIdle}
           onMoveEnd={handleMoveEnd}
           onClick={handleMapClick}
