@@ -1,8 +1,8 @@
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import { point } from '@turf/helpers';
-import type { Polygon, MultiPolygon, Feature, Position } from 'geojson';
-import type maplibregl from 'maplibre-gl';
-import { shoelaceArea } from '../utils/shoelaceArea';
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { point } from "@turf/helpers";
+import type { Polygon, MultiPolygon, Feature, Position } from "geojson";
+import type maplibregl from "maplibre-gl";
+import { shoelaceArea } from "./shoelaceArea";
 
 export interface BuildingSelectionResult {
   buildingId: string;
@@ -20,7 +20,7 @@ export function queryBuildingAtPoint(
   lngLat: { lng: number; lat: number },
 ): BuildingSelectionResult | null {
   const features = map.queryRenderedFeatures([pointCoords.x, pointCoords.y], {
-    layers: ['3d-buildings'],
+    layers: ["3d-buildings"],
   });
 
   if (!features || features.length === 0) {
@@ -36,10 +36,10 @@ export function queryBuildingAtPoint(
     const { geometry, properties } = feature;
     if (!geometry) continue;
 
-    if (geometry.type === 'Polygon') {
+    if (geometry.type === "Polygon") {
       const outerRing = (geometry as Polygon).coordinates[0];
       const candidate = {
-        type: 'Feature' as const,
+        type: "Feature" as const,
         properties: {},
         geometry: geometry as Polygon,
       };
@@ -51,13 +51,13 @@ export function queryBuildingAtPoint(
           bestProperties = properties;
         }
       }
-    } else if (geometry.type === 'MultiPolygon') {
+    } else if (geometry.type === "MultiPolygon") {
       for (const polygonCoords of (geometry as MultiPolygon).coordinates) {
         const outerRing = polygonCoords[0];
         const candidate = {
-          type: 'Feature' as const,
+          type: "Feature" as const,
           properties: {},
-          geometry: { type: 'Polygon' as const, coordinates: polygonCoords },
+          geometry: { type: "Polygon" as const, coordinates: polygonCoords },
         };
         if (booleanPointInPolygon(clicked, candidate)) {
           const area = shoelaceArea(outerRing);
@@ -97,8 +97,8 @@ export function queryBuildingAtPoint(
       : [...cleanRing, first];
 
   const selectedFeature: Feature<Polygon> = {
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [closedRing] },
+    type: "Feature",
+    geometry: { type: "Polygon", coordinates: [closedRing] },
     properties: bestProperties,
   };
 
@@ -130,17 +130,17 @@ export function handleBuildingClick(
   e: maplibregl.MapMouseEvent,
 ): BuildingSelectionResult | null {
   const result = queryBuildingAtPoint(map, e.point, e.lngLat);
-  const selectionSource = map.getSource('selected-building') as
+  const selectionSource = map.getSource("selected-building") as
     | maplibregl.GeoJSONSource
     | undefined;
 
   if (!result) {
-    selectionSource?.setData({ type: 'FeatureCollection', features: [] });
+    selectionSource?.setData({ type: "FeatureCollection", features: [] });
     return null;
   }
 
   selectionSource?.setData({
-    type: 'FeatureCollection',
+    type: "FeatureCollection",
     features: [result.feature],
   });
 
@@ -151,8 +151,8 @@ export function handleBuildingClick(
  * Legacy imperative selection clearer.
  */
 export function clearBuildingSelection(map: maplibregl.Map) {
-  const source = map.getSource('selected-building') as
+  const source = map.getSource("selected-building") as
     | maplibregl.GeoJSONSource
     | undefined;
-  source?.setData({ type: 'FeatureCollection', features: [] });
+  source?.setData({ type: "FeatureCollection", features: [] });
 }

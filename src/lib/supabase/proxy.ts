@@ -54,16 +54,26 @@ export async function updateSession(request: NextRequest) {
     ROUTES.EMAIL_VERIFICATION,
   ];
 
-  const PUBLIC_ROUTES = [
-    ROUTES.MAP,
-    ROUTES.FEED,
-    ROUTES.MAP_V2,
-    ROUTES.MAP_SOURCE,
-  ];
+  const PUBLIC_ROUTES = [ROUTES.MAP, ROUTES.FEED, ROUTES.MAP_V2];
+
+  const API_ROUTES = [ROUTES.MAP_SOURCE];
 
   const PROTECTED_ROUTES = [ROUTES.PROFILE_SETUP, ROUTES.QR_SCAN, ROUTES.MY_QR];
 
   if (!user) {
+    // ✅ THE UNIVERSAL FIX: Purely pass through static files, map configurations, and metadata
+    if (
+      path === ROUTES.MAP_SOURCE ||
+      path.startsWith("/api/map-source") || // <--- ADD THIS LINE
+      path.startsWith("/_next") ||
+      path.startsWith("/static") ||
+      path.includes("style") ||
+      path.endsWith(".json")
+    ) {
+      return NextResponse.next();
+    }
+
+    // Your existing fallback route safety rules
     if (!AUTH_ROUTES.includes(path) && !PUBLIC_ROUTES.includes(path)) {
       return NextResponse.redirect(new URL(ROUTES.MAP, request.url));
     }
