@@ -61,10 +61,9 @@ export async function updateSession(request: NextRequest) {
   const PROTECTED_ROUTES = [ROUTES.PROFILE_SETUP, ROUTES.QR_SCAN, ROUTES.MY_QR];
 
   if (!user) {
-    // ✅ THE UNIVERSAL FIX: Purely pass through static files, map configurations, and metadata
     if (
       path === ROUTES.MAP_SOURCE ||
-      path.startsWith("/api/map-source") || // <--- ADD THIS LINE
+      path.startsWith("/api/map-source") ||
       path.startsWith("/_next") ||
       path.startsWith("/static") ||
       path.includes("style") ||
@@ -73,7 +72,6 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Your existing fallback route safety rules
     if (!AUTH_ROUTES.includes(path) && !PUBLIC_ROUTES.includes(path)) {
       return NextResponse.redirect(new URL(ROUTES.MAP, request.url));
     }
