@@ -16,7 +16,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { signUpAction } from "../actions/auth";
-import PasswordRulesCard from "./PasswordRuleCard";
+import PasswordRulesCard from "../../../components/shared/PasswordRuleCard";
 import { ROUTES } from "@/utils/constants/routes";
 import { useRouter } from "next/navigation";
 

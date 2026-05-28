@@ -214,7 +214,7 @@ export function AppImagePicker<T extends FieldValues>({
                 className={cn(
                   "group hover:bg-secondary/50 relative cursor-pointer overflow-hidden border-2 border-dashed transition-all",
                   "bg-secondary focus-within:ring-ring flex flex-col items-center justify-center outline-none focus-within:ring-2",
-                  isAvatar ? "h-32 w-32 rounded-2xl" : "h-48 w-full rounded-xl",
+                  isAvatar ? "h-32 w-32 rounded-xl" : "h-48 w-full rounded-xl",
                   hasError ? "border-destructive" : "border-border",
                   disabled && "cursor-not-allowed opacity-50",
                 )}
@@ -227,7 +227,7 @@ export function AppImagePicker<T extends FieldValues>({
                     className="object-cover"
                   />
                 ) : (
-                  <div className="text-muted-foreground flex flex-col items-center gap-2">
+                  <div className="text-muted-foreground z-40 flex flex-col items-center gap-2">
                     {isAvatar ? (
                       <User className="h-8 w-8" />
                     ) : (

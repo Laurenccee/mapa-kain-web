@@ -19,25 +19,25 @@ export default function ProfileStats() {
 
   return (
     /* Changed 'flex' to 'grid grid-cols-3' to instantly enforce identical card widths */
-    <div className="mx-auto grid w-full max-w-md grid-cols-3 gap-4">
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardDescription className="text-xs">Total Stamps</CardDescription>
-          <CardTitle className="text-base font-bold">{totalStamps}</CardTitle>
+    <div className="grid w-full grid-cols-3 gap-4">
+      <Card className="bg-primary-foreground w-full">
+        <CardHeader className="gap-0 text-center">
+          <h1 className="text-sm">Total Stamps</h1>
+          <p className="text-base font-bold">{totalStamps}</p>
         </CardHeader>
       </Card>
 
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardDescription className="text-xs">Member Since</CardDescription>
-          <CardTitle className="text-base font-bold">{memberSince}</CardTitle>
+      <Card className="bg-primary-foreground w-full">
+        <CardHeader className="gap-0 text-center">
+          <h1 className="text-sm">Member Since</h1>
+          <p className="text-base font-bold">{memberSince}</p>
         </CardHeader>
       </Card>
 
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardDescription className="text-xs">Active Rewards</CardDescription>
-          <CardTitle className="text-base font-bold">{activeRewards}</CardTitle>
+      <Card className="bg-primary-foreground w-full">
+        <CardHeader className="gap-0 text-center">
+          <h1 className="text-sm">Active Rewards</h1>
+          <p className="text-base font-bold">{activeRewards}</p>
         </CardHeader>
       </Card>
     </div>

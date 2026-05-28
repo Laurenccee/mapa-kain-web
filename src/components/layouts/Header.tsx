@@ -18,21 +18,29 @@ export default function Header({ className }: HeaderProps) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  const isMapPage = pathname === "/map";
+  const IS_STICKY_HEADER = [
+    ROUTES.MAP,
+    ROUTES.PROFILE_SETUP,
+    ROUTES.PROFILE_EDIT,
+    ROUTES.SIGN_IN,
+    ROUTES.STORE_REGISTER,
+  ];
 
   return (
     <header
       className={cn(
-        isMapPage
+        IS_STICKY_HEADER.includes(pathname)
           ? "border-b-border fixed bg-transparent"
           : "bg-card border-b-border sticky",
         "top-0 right-0 left-0 z-50 h-16 w-full px-4 py-3 md:px-6",
         className,
       )}
     >
-      <div className="mx-auto flex max-w-screen-2xl items-center justify-between">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg tracking-tight">OnSpot</span>
+          <Link href={ROUTES.ROOT} className="text-lg tracking-tight">
+            MapaKain
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">

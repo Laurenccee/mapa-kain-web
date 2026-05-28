@@ -44,7 +44,16 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   const path = request.nextUrl.pathname;
+
+  if (path === ROUTES.RESET_PASSWORD) {
+    const token = request.nextUrl.searchParams.get("code");
+    if (!token) {
+      return NextResponse.redirect(new URL(ROUTES.SIGN_IN, request.url));
+    }
+    return supabaseResponse;
+  }
 
   const AUTH_ROUTES = [
     ROUTES.ROOT,
@@ -52,18 +61,14 @@ export async function updateSession(request: NextRequest) {
     ROUTES.SIGN_UP,
     ROUTES.FORGET_PASSWORD,
     ROUTES.EMAIL_VERIFICATION,
+    ROUTES.RESET_PASSWORD,
   ];
-
-  const PUBLIC_ROUTES = [ROUTES.MAP, ROUTES.FEED, ROUTES.MAP_V2];
-
-  const API_ROUTES = [ROUTES.MAP_SOURCE];
-
-  const PROTECTED_ROUTES = [ROUTES.PROFILE_SETUP, ROUTES.QR_SCAN, ROUTES.MY_QR];
+  const PUBLIC_ROUTES = [ROUTES.MAP, ROUTES.FEED];
 
   if (!user) {
     if (
       path === ROUTES.MAP_SOURCE ||
-      path.startsWith("/api/map-source") ||
+      path.startsWith(ROUTES.API) ||
       path.startsWith("/_next") ||
       path.startsWith("/static") ||
       path.includes("style") ||

@@ -28,7 +28,7 @@ export default function BottomTabBar() {
     if (isAuthenticated) {
       items.push({
         name: 'Profile',
-        href: ROUTES.USER(userId || ''),
+        href: ROUTES.PROFILE(userId || ''),
         icon: UserIcon,
       });
     }

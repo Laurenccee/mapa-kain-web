@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, RefObject, useEffect } from "react";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import type { FeatureCollection, Polygon, Feature } from "geojson";
-import { queryBuildingAtPoint } from "../utils/buildingSelection";
+import { queryBuildingAtPoint, type BuildingSelectionResult } from "../utils/buildingSelection";
 import { queryClaimedBuildings } from "../utils/claimedBuildings";
 
 interface SelectedBuilding {
@@ -9,7 +9,10 @@ interface SelectedBuilding {
   properties: Record<string, any>;
 }
 
-export function useMapLayers(mapRef: RefObject<MapRef | null>) {
+export function useMapLayers(
+  mapRef: RefObject<MapRef | null>,
+  onBuildingSelect?: (result: BuildingSelectionResult | null) => void,
+) {
   const [isLayersReady, setIsLayersReady] = useState(false);
   const [selectedBuilding, setSelectedBuilding] =
     useState<SelectedBuilding | null>(null);
@@ -63,16 +66,19 @@ export function useMapLayers(mapRef: RefObject<MapRef | null>) {
         properties: result.properties,
       });
       setSelectedFeature(result.feature);
+      onBuildingSelect?.(result);
     } else {
       setSelectedBuilding(null);
       setSelectedFeature(null);
+      onBuildingSelect?.(null);
     }
-  }, []);
+  }, [onBuildingSelect]);
 
   const clearSelection = useCallback(() => {
     setSelectedBuilding(null);
     setSelectedFeature(null);
-  }, []);
+    onBuildingSelect?.(null);
+  }, [onBuildingSelect]);
 
   const selectedGeoJson = useMemo<FeatureCollection>(
     () => ({

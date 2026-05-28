@@ -2,7 +2,13 @@
 
 import InputField from "@/components/shared/InputField";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft02Icon, Email, User03Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft02Icon,
+  Email,
+  Loading02Icon,
+  Mail,
+  User03Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTransition } from "react";
 import {
@@ -72,8 +78,12 @@ export default function ForgetPasswordForm() {
         className="w-full"
         disabled={isPending}
       >
-        Send Password Reset Link
-        <HugeiconsIcon icon={Email} />
+        {isPending ? "Resetting Password..." : "Reset Password"}
+        {isPending ? (
+          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
+        ) : (
+          <HugeiconsIcon icon={Email} />
+        )}
       </Button>
     </form>
   );

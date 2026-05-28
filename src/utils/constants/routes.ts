@@ -4,15 +4,21 @@ export const ROUTES = {
   SIGN_UP: "/sign-up",
   FORGET_PASSWORD: "/forget-password",
   EMAIL_VERIFICATION: "/email-verification",
+  RESET_PASSWORD: "/reset-password",
 
-  PROFILE_SETUP: "/profile/setup",
   QR_SCAN: "/qr-scan",
   MY_QR: "/my-qr",
 
   MAP: "/map",
-  MAP_V2: "/map-v2",
   FEED: "/feed",
-  USER: (id: string) => `/user/${id}` as const,
+
+  PROFILE_SETUP: "/profile/setup",
+  PROFILE_EDIT: "/profile/edit",
+  PROFILE: (id: string) => `/profile/${id}` as const,
+
+  STORE_REGISTER: "/store/register",
+  STORE: (id: string) => `/store/${id}` as const,
 
   MAP_SOURCE: "/api/map-source",
+  API: "/api",
 };

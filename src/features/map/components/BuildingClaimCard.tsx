@@ -21,7 +21,7 @@ export function BuildingClaimCard({
               {building.properties.name || "Unnamed Building"}
             </h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
-              OSM Building ID:{" "}
+              Building ID:{" "}
               <span className="text-primary font-mono">{building.id}</span>
             </p>
           </div>

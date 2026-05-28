@@ -18,8 +18,13 @@ import {
   claimedLayerConfig,
   highlightedLayerConfig, // Make sure this is exported from layerConfigs.ts
 } from "../utils/layerConfigs";
+import type { BuildingSelectionResult } from "../utils/buildingSelection";
 
-export default function MapDisplay() {
+interface MapDisplayProps {
+  onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
+}
+
+export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
   const mapRef = useRef<MapRef>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -39,7 +44,7 @@ export default function MapDisplay() {
     clearSelection,
     claimedGeoJson,
     selectedGeoJson,
-  } = useMapLayers(mapRef);
+  } = useMapLayers(mapRef, onBuildingSelect);
 
   const buildingsLayer = useMemo(
     () => getBuildingsLayerConfig(isDark),
