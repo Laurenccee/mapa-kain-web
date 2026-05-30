@@ -9,7 +9,7 @@ export default function ProtectedLayout({
   return (
     <div className="bg-background relative flex h-screen w-full flex-col">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex min-h-0 flex-1 flex-col">{children}</main>
     </div>
   );
 }

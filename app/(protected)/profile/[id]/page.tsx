@@ -21,7 +21,7 @@ const mobileFlatCardClassName =
 
 export default function ProfilePage() {
   return (
-    <section className="flex min-h-0 flex-1 flex-col px-4 py-6 pb-32 sm:py-8">
+    <section className="flex flex-col px-4 py-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8">
         <ProfileSection />
 
@@ -91,11 +91,6 @@ export default function ProfilePage() {
                       </Link>
                     </Button>
                   </div>
-                  <SignOutButton
-                    size="lg"
-                    variant="default"
-                    className="w-full bg-black"
-                  />
                 </CardContent>
               </Card>
             </section>
