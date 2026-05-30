@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   CardAction,
@@ -10,12 +9,10 @@ import {
 
 export default function StampsSection() {
   return (
-    <div className="col-span-1 flex h-fit flex-col gap-4 sm:col-span-3">
-      {/* The title stays completely separate and clean */}
-      <h1 className="text-xl">All Store Stamps</h1>
+    <div className="flex h-fit flex-col gap-3 sm:gap-4 lg:col-span-3">
+      <h2 className="text-lg sm:text-xl">All Store Stamps</h2>
 
-      {/* 2. Create a nested grid layout specifically for the cards list */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <Card>
           <CardHeader>
             <div className="flex flex-col justify-center">
@@ -24,7 +21,7 @@ export default function StampsSection() {
             </div>
             <CardAction className="aspect-square h-full rounded-lg bg-black"></CardAction>
           </CardHeader>
-          <CardContent className="grid grid-cols-5 gap-2">
+          <CardContent className="grid grid-cols-5 gap-1.5 sm:gap-2">
             {[...Array(10)].map((_, index) => (
               <div
                 key={index}
@@ -33,8 +30,6 @@ export default function StampsSection() {
             ))}
           </CardContent>
         </Card>
-
-        {/* Future cards added here will automatically wrap nicely into rows and columns! */}
       </div>
     </div>
   );

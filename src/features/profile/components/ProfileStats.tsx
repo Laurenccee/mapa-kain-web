@@ -1,45 +1,42 @@
 "use client";
 
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { formatMonthYear } from "@/utils/formatters/date";
 
+const statLabelClassName =
+  "text-muted-foreground text-[10px] font-medium tracking-wide uppercase sm:text-xs";
+
+const statValueClassName =
+  "font-heading text-lg leading-none font-semibold tracking-tight tabular-nums sm:text-xl";
+
 export default function ProfileStats() {
   const { profile } = useAuth();
 
-  const totalStamps = 42;
-  const memberSince = formatMonthYear(profile?.created_at, "numeric") || "N/A";
-  const activeRewards = 5;
+  const stats = [
+    { label: "Total Stamps", value: 42 },
+    {
+      label: "Member Since",
+      value: formatMonthYear(profile?.created_at, "numeric") || "N/A",
+    },
+    { label: "Active Rewards", value: 5 },
+  ] as const;
 
   return (
-    /* Changed 'flex' to 'grid grid-cols-3' to instantly enforce identical card widths */
-    <div className="grid w-full grid-cols-3 gap-4">
-      <Card className="bg-primary-foreground w-full">
-        <CardHeader className="gap-0 text-center">
-          <h1 className="text-sm">Total Stamps</h1>
-          <p className="text-base font-bold">{totalStamps}</p>
-        </CardHeader>
-      </Card>
-
-      <Card className="bg-primary-foreground w-full">
-        <CardHeader className="gap-0 text-center">
-          <h1 className="text-sm">Member Since</h1>
-          <p className="text-base font-bold">{memberSince}</p>
-        </CardHeader>
-      </Card>
-
-      <Card className="bg-primary-foreground w-full">
-        <CardHeader className="gap-0 text-center">
-          <h1 className="text-sm">Active Rewards</h1>
-          <p className="text-base font-bold">{activeRewards}</p>
-        </CardHeader>
-      </Card>
+    <div className="grid w-full grid-cols-3 gap-2 sm:gap-4">
+      {stats.map((stat) => (
+        <Card
+          key={stat.label}
+          size="sm"
+          className="bg-primary-foreground w-full py-0"
+        >
+          <CardHeader className="gap-1 px-2 py-3 text-center sm:gap-1.5 sm:px-3 sm:py-4">
+            <p className={statLabelClassName}>{stat.label}</p>
+            <p className={statValueClassName}>{stat.value}</p>
+          </CardHeader>
+        </Card>
+      ))}
     </div>
   );
 }
