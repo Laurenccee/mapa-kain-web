@@ -39,7 +39,7 @@ export default function BottomTabBar() {
     <div className="fixed bottom-6 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 items-center px-4 sm:max-w-md">
       <div className="flex w-full items-center justify-center gap-2 sm:gap-4">
         <nav
-          className="border-border bg-card flex flex-3 items-center justify-between gap-1 rounded-xl border p-1.5 backdrop-blur-xl"
+          className="border-border bg-card flex flex-3 items-center justify-between gap-1 rounded-xl border p-1.5 shadow-xl backdrop-blur-xl"
           aria-label="Primary Bottom Tab"
         >
           <ul className="flex w-full items-center justify-between gap-1">
@@ -88,7 +88,7 @@ export default function BottomTabBar() {
 
         {isAuthenticated && (
           <nav
-            className="bg-primary flex aspect-square h-full min-h-14.5 items-center justify-center rounded-lg p-2 transition-transform sm:min-h-16.5"
+            className="bg-primary flex aspect-square h-full min-h-14.5 items-center justify-center rounded-lg p-2 shadow-xl transition-transform sm:min-h-16.5"
             aria-label="QR Code Actions"
           >
             <Link
