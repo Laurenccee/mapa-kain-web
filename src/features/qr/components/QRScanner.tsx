@@ -1,7 +1,7 @@
 // features/qr/components/QRScanner.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Laptop, CameraOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,25 +26,165 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [scanStatus, setScanStatus] = useState("Starting camera...");
   const [scannedData, setScannedData] = useState<string | null>(null);
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+
   const qrEngineRef = useRef<Html5Qrcode | null>(null);
   const onScanSuccessRef = useRef(onScanSuccess);
   const scanLockRef = useRef(false);
+  const isStartingRef = useRef(false);
 
-  const clearScannerTarget = () => {
+  useEffect(() => {
+    onScanSuccessRef.current = onScanSuccess;
+  }, [onScanSuccess]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const clearScannerTarget = useCallback(() => {
     const target = document.getElementById("qr-reader-target");
     if (target) target.innerHTML = "";
-  };
+  }, []);
 
-  const resumeScannerAfterDialog = () => {
+  const stopScanner = useCallback(async () => {
     const provider = qrEngineRef.current;
-    if (!provider || !provider.isScanning) return;
+    qrEngineRef.current = null;
+    isStartingRef.current = false;
+
+    if (provider) {
+      try {
+        if (provider.isScanning) {
+          await provider.stop();
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message.toLowerCase() : String(err);
+
+        if (
+          !message.includes("not running") &&
+          !message.includes("removechild") &&
+          !message.includes("not a child")
+        ) {
+          console.error("Failed to stop scanner smoothly:", err);
+        }
+      }
+
+      try {
+        provider.clear();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message.toLowerCase() : String(err);
+
+        if (
+          !message.includes("removechild") &&
+          !message.includes("not a child")
+        ) {
+          console.debug("Scanner clear skipped:", err);
+        }
+      }
+    }
+
+    if (!qrEngineRef.current || qrEngineRef.current === provider) {
+      clearScannerTarget();
+    }
+  }, [clearScannerTarget]);
+
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    if (scanLockRef.current) return;
+    scanLockRef.current = true;
+
+    console.log("Scanned QR:", decodedText);
+    setScanStatus("QR detected");
+    setScannedData(decodedText);
+    setIsResultDialogOpen(true);
+    onScanSuccessRef.current(decodedText);
 
     try {
-      provider.resume();
+      qrEngineRef.current?.pause(true);
     } catch (err) {
-      console.debug("Scanner resume skipped:", err);
+      console.debug("Scanner pause skipped:", err);
     }
-  };
+  }, []);
+
+  const startScanner = useCallback(async () => {
+    if (isDesktop === null || isDesktop) return;
+    if (isStartingRef.current) return;
+    if (qrEngineRef.current?.isScanning) return;
+
+    isStartingRef.current = true;
+    setCameraError(null);
+    setScanStatus("Starting camera...");
+    scanLockRef.current = false;
+
+    await stopScanner();
+
+    const provider = new Html5Qrcode("qr-reader-target", {
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      useBarCodeDetectorIfSupported: false,
+      verbose: false,
+    });
+
+    qrEngineRef.current = provider;
+
+    const scanConfig = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      disableFlip: false,
+    };
+
+    try {
+      try {
+        await provider.start(
+          { facingMode: "environment" },
+          scanConfig,
+          handleScanSuccess,
+          () => {},
+        );
+      } catch (primaryError) {
+        await provider.start(
+          { facingMode: "user" },
+          scanConfig,
+          handleScanSuccess,
+          () => {},
+        );
+        console.debug(
+          "Rear camera start failed; using front camera.",
+          primaryError,
+        );
+      }
+
+      setScanStatus("Scanning automatically...");
+    } catch (err) {
+      console.error("Camera initialization failed:", err);
+      setScanStatus("Camera unavailable");
+      setCameraError(
+        "Could not access the camera. Check permission then tap Retry Camera.",
+      );
+      await stopScanner();
+    } finally {
+      isStartingRef.current = false;
+    }
+  }, [handleScanSuccess, isDesktop, stopScanner]);
+
+  const resumeScannerAfterDialog = useCallback(() => {
+    const provider = qrEngineRef.current;
+
+    if (provider?.isScanning) {
+      try {
+        provider.resume();
+        return;
+      } catch (err) {
+        console.debug("Scanner resume skipped:", err);
+      }
+    }
+
+    void startScanner();
+  }, [startScanner]);
 
   const handleResultDialogOpenChange = (open: boolean) => {
     setIsResultDialogOpen(open);
@@ -58,138 +198,16 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
   };
 
   useEffect(() => {
-    onScanSuccessRef.current = onScanSuccess;
-  }, [onScanSuccess]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
     if (isDesktop === null || isDesktop) return;
 
-    clearScannerTarget();
-    setCameraError(null);
-    setScanStatus("Starting camera...");
     setScannedData(null);
     setIsResultDialogOpen(false);
-    scanLockRef.current = false;
-
-    const html5QrcodeProvider = new Html5Qrcode("qr-reader-target", {
-      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-      useBarCodeDetectorIfSupported: false,
-      verbose: false,
-    });
-    qrEngineRef.current = html5QrcodeProvider;
-    let isMounted = true;
-
-    const startScanner = async () => {
-      try {
-        await html5QrcodeProvider.start(
-          { facingMode: "environment" },
-          {
-            fps: 12,
-            qrbox: (viewfinderWidth, viewfinderHeight) => {
-              const edge = Math.floor(
-                Math.min(viewfinderWidth, viewfinderHeight) * 0.72,
-              );
-              return { width: edge, height: edge };
-            },
-          },
-          (decodedText) => {
-            if (scanLockRef.current) return;
-            scanLockRef.current = true;
-
-            console.log("Scanned QR:", decodedText);
-            setScanStatus("QR detected");
-            setScannedData(decodedText);
-            setIsResultDialogOpen(true);
-            onScanSuccessRef.current(decodedText);
-
-            try {
-              html5QrcodeProvider.pause(true);
-            } catch (err) {
-              console.debug("Scanner pause skipped:", err);
-            }
-          },
-          () => {},
-        );
-
-        if (isMounted) {
-          setScanStatus("Scanning automatically...");
-        }
-
-        if (!isMounted && html5QrcodeProvider.isScanning) {
-          await html5QrcodeProvider.stop().catch(() => undefined);
-          try {
-            html5QrcodeProvider.clear();
-          } catch {
-            // Ignore clear errors for stale strict-mode runs.
-          }
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        console.error("Camera initialization failed:", err);
-        setScanStatus("Camera unavailable");
-        setCameraError("Could not access the rear camera.");
-      }
-    };
-
     void startScanner();
 
     return () => {
-      isMounted = false;
-
-      const provider = qrEngineRef.current;
-      qrEngineRef.current = null;
-
-      if (!provider) return;
-
-      const safeClear = () => {
-        try {
-          provider.clear();
-        } catch (err) {
-          const message =
-            err instanceof Error ? err.message.toLowerCase() : String(err);
-
-          if (
-            !message.includes("removechild") &&
-            !message.includes("not a child")
-          ) {
-            console.debug("Scanner clear skipped:", err);
-          }
-        }
-
-        clearScannerTarget();
-      };
-
-      const stopAndClear = async () => {
-        if (provider.isScanning) {
-          await provider.stop().catch((err) => {
-            const message =
-              err instanceof Error ? err.message.toLowerCase() : String(err);
-
-            if (
-              !message.includes("not running") &&
-              !message.includes("removechild") &&
-              !message.includes("not a child")
-            ) {
-              console.error("Failed to stop scanner smoothly:", err);
-            }
-          });
-        }
-
-        safeClear();
-      };
-
-      void stopAndClear();
+      void stopScanner();
     };
-  }, [isDesktop]);
+  }, [isDesktop, startScanner, stopScanner]);
 
   if (isDesktop === null) {
     return (
@@ -199,7 +217,8 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     );
   }
 
-  // Desktop View
+  console.log(scanStatus);
+
   if (isDesktop) {
     return (
       <div className="mx-auto flex h-full w-full max-w-md flex-col items-center justify-center p-6 text-center">
@@ -217,7 +236,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     );
   }
 
-  // Mobile View
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
       {cameraError ? (
@@ -227,26 +245,35 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
             <p className="text-sm text-white/90">{cameraError}</p>
           </div>
 
-          <Button
-            asChild
-            variant="secondary"
-            className="w-full max-w-xs text-sm font-semibold tracking-[0.14em] uppercase"
-          >
-            <Link href={ROUTES.MY_QR}>Go to QR Page</Link>
-          </Button>
+          <div className="flex w-full max-w-xs flex-col gap-2">
+            <Button
+              onClick={() => {
+                void startScanner();
+              }}
+              variant="secondary"
+              className="h-12 text-sm font-semibold tracking-[0.12em] uppercase"
+            >
+              Retry Camera
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="h-12 text-sm font-semibold tracking-[0.12em] uppercase"
+            >
+              <Link href={ROUTES.MY_QR}>Go to QR Page</Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <>
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <div className="relative h-[92vw] max-h-88 w-[92vw] max-w-88 rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+            <div className="relative h-[92vw] max-h-88 w-[92vw] max-w-88 rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
           </div>
 
           <div className="absolute top-24 left-1/2 z-30 -translate-x-1/2 rounded-lg bg-black/45 px-4 py-2 backdrop-blur-sm">
             <p className="text-center text-base tracking-[0.18em] text-white/90 uppercase">
               Scan QR Code
-            </p>
-            <p className="mt-1 text-center text-[11px] tracking-wide text-white/70">
-              {scanStatus}
             </p>
           </div>
 
