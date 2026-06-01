@@ -19,6 +19,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
 import { registerStoreAction } from "../actions/store";
+import { ROUTES } from "@/utils/constants/routes";
+import { useRouter } from "next/navigation";
 
 interface RegisterStoreFormProps {
   selectedBuilding: BuildingSelectionResult | null;
@@ -28,8 +30,9 @@ export default function RegisterStoreForm({
   selectedBuilding,
 }: RegisterStoreFormProps) {
   const [isPending, startTransition] = useTransition();
-
   const selectedBuildingId = selectedBuilding?.buildingId ?? "";
+
+  const router = useRouter();
 
   const { control, handleSubmit, setValue, clearErrors } =
     useForm<RegisterStoreData>({
@@ -67,6 +70,7 @@ export default function RegisterStoreForm({
           );
         } else {
           toast.success("Store registration request submitted!");
+          router.replace(ROUTES.MAP);
         }
       } catch (error) {
         toast.error("An error occurred during store registration.");
