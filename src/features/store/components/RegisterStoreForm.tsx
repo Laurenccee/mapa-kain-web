@@ -113,7 +113,7 @@ export default function RegisterStoreForm({
             />
           }
         />
-        <div className="flex gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <InputField
             label="Open Time"
             type="time"

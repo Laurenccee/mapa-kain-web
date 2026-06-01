@@ -28,7 +28,11 @@ export default function Header({ className }: HeaderProps) {
     ROUTES.QR_SCAN,
   ];
 
-  const IS_QR_PAGES = pathname === ROUTES.QR_SCAN || pathname === ROUTES.MY_QR;
+  const WITH_BACK_BUTTON = [
+    ROUTES.QR_SCAN,
+    ROUTES.MY_QR,
+    ROUTES.STORE_REGISTER,
+  ];
 
   return (
     <header
@@ -41,7 +45,7 @@ export default function Header({ className }: HeaderProps) {
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between">
-        {IS_QR_PAGES && <BackButton />}
+        {WITH_BACK_BUTTON.includes(pathname) && <BackButton />}
         <div className="flex items-center gap-2">
           <Link href={ROUTES.ROOT} className="text-lg tracking-tight">
             MapaKain
@@ -50,7 +54,7 @@ export default function Header({ className }: HeaderProps) {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {!IS_QR_PAGES && (
+          {!WITH_BACK_BUTTON.includes(pathname) && (
             <>
               {isAuthenticated ? (
                 <SignOutButton />
