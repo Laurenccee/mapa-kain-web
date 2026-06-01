@@ -137,7 +137,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
 
     const scanConfig = {
       fps: 10,
-      qrbox: { width: 270, height: 270 },
+      qrbox: { width: 250, height: 250 },
     };
 
     try {
