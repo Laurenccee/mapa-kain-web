@@ -136,7 +136,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     qrEngineRef.current = provider;
 
     const scanConfig = {
-      fps: 10,
+      fps: 6,
       qrbox: { width: 250, height: 250 },
     };
 
@@ -212,6 +212,8 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     );
   }
 
+  const isActivelyScanning = scanStatus === "Scanning...";
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
       {cameraError ? (
@@ -243,8 +245,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         </div>
       ) : (
         <>
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center" />
-
           <div className="absolute top-24 left-1/2 z-30 -translate-x-1/2 rounded-lg bg-black/45 px-4 py-2 backdrop-blur-sm">
             <p className="text-center text-base tracking-[0.18em] text-white/90 uppercase">
               Scan QR Code
