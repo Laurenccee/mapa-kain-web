@@ -5,6 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Laptop, CameraOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { ROUTES } from "@/utils/constants/routes";
 
@@ -15,12 +23,38 @@ interface QRScannerProps {
 export function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState("Starting camera...");
+  const [scannedData, setScannedData] = useState<string | null>(null);
+  const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const qrEngineRef = useRef<Html5Qrcode | null>(null);
   const onScanSuccessRef = useRef(onScanSuccess);
+  const scanLockRef = useRef(false);
 
   const clearScannerTarget = () => {
     const target = document.getElementById("qr-reader-target");
     if (target) target.innerHTML = "";
+  };
+
+  const resumeScannerAfterDialog = () => {
+    const provider = qrEngineRef.current;
+    if (!provider || !provider.isScanning) return;
+
+    try {
+      provider.resume();
+    } catch (err) {
+      console.debug("Scanner resume skipped:", err);
+    }
+  };
+
+  const handleResultDialogOpenChange = (open: boolean) => {
+    setIsResultDialogOpen(open);
+
+    if (!open) {
+      scanLockRef.current = false;
+      setScannedData(null);
+      setScanStatus("Scanning automatically...");
+      resumeScannerAfterDialog();
+    }
   };
 
   useEffect(() => {
@@ -41,10 +75,14 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
 
     clearScannerTarget();
     setCameraError(null);
+    setScanStatus("Starting camera...");
+    setScannedData(null);
+    setIsResultDialogOpen(false);
+    scanLockRef.current = false;
 
     const html5QrcodeProvider = new Html5Qrcode("qr-reader-target", {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-      useBarCodeDetectorIfSupported: true,
+      useBarCodeDetectorIfSupported: false,
       verbose: false,
     });
     qrEngineRef.current = html5QrcodeProvider;
@@ -55,21 +93,36 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         await html5QrcodeProvider.start(
           { facingMode: "environment" },
           {
-            fps: 10,
+            fps: 12,
             qrbox: (viewfinderWidth, viewfinderHeight) => {
               const edge = Math.floor(
-                Math.min(viewfinderWidth, viewfinderHeight) * 0.78,
+                Math.min(viewfinderWidth, viewfinderHeight) * 0.72,
               );
               return { width: edge, height: edge };
             },
-            aspectRatio: 1,
           },
           (decodedText) => {
+            if (scanLockRef.current) return;
+            scanLockRef.current = true;
+
             console.log("Scanned QR:", decodedText);
+            setScanStatus("QR detected");
+            setScannedData(decodedText);
+            setIsResultDialogOpen(true);
             onScanSuccessRef.current(decodedText);
+
+            try {
+              html5QrcodeProvider.pause(true);
+            } catch (err) {
+              console.debug("Scanner pause skipped:", err);
+            }
           },
           () => {},
         );
+
+        if (isMounted) {
+          setScanStatus("Scanning automatically...");
+        }
 
         if (!isMounted && html5QrcodeProvider.isScanning) {
           await html5QrcodeProvider.stop().catch(() => undefined);
@@ -82,6 +135,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
       } catch (err) {
         if (!isMounted) return;
         console.error("Camera initialization failed:", err);
+        setScanStatus("Camera unavailable");
         setCameraError("Could not access the rear camera.");
       }
     };
@@ -191,6 +245,9 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
             <p className="text-center text-base tracking-[0.18em] text-white/90 uppercase">
               Scan QR Code
             </p>
+            <p className="mt-1 text-center text-[11px] tracking-wide text-white/70">
+              {scanStatus}
+            </p>
           </div>
 
           <div className="absolute right-0 bottom-8 left-0 z-30 flex justify-center px-6">
@@ -209,6 +266,38 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         id="qr-reader-target"
         className="h-full w-full [&_video]:h-full! [&_video]:w-full! [&_video]:object-cover"
       />
+
+      <Dialog
+        open={isResultDialogOpen}
+        onOpenChange={handleResultDialogOpenChange}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>QR Code Scanned</DialogTitle>
+            <DialogDescription>
+              The scanned QR content is shown below.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="bg-muted/50 rounded-md border p-3">
+            <p className="text-foreground font-mono text-xs leading-relaxed break-all">
+              {scannedData}
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => handleResultDialogOpenChange(false)}
+            >
+              Scan Again
+            </Button>
+            <Button asChild>
+              <Link href={ROUTES.MY_QR}>Open My QR</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <style jsx>{`
         :global(#qr-reader-target #qr-shaded-region) {
