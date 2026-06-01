@@ -69,6 +69,7 @@ export async function updateSession(request: NextRequest) {
     if (
       path === ROUTES.MAP_SOURCE ||
       path.startsWith(ROUTES.API) ||
+      path.startsWith("/scanner-barebone") ||
       path.startsWith("/_next") ||
       path.startsWith("/static") ||
       path.includes("style") ||

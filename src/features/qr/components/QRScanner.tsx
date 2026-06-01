@@ -16,6 +16,13 @@ import {
 import Link from "next/link";
 import { ROUTES } from "@/utils/constants/routes";
 
+const SCANNER_ELEMENT_ID = "qr-reader-target";
+
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 interface QRScannerProps {
   onScanSuccess: (decodedText: string) => void;
 }
@@ -47,7 +54,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
   }, []);
 
   const clearScannerTarget = useCallback(() => {
-    const target = document.getElementById("qr-reader-target");
+    const target = document.getElementById(SCANNER_ELEMENT_ID);
     if (target) target.innerHTML = "";
   }, []);
 
@@ -75,7 +82,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
       }
 
       try {
-        provider.clear();
+        await provider.clear();
       } catch (err) {
         const message =
           err instanceof Error ? err.message.toLowerCase() : String(err);
@@ -94,38 +101,35 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     }
   }, [clearScannerTarget]);
 
-  const handleScanSuccess = useCallback((decodedText: string) => {
-    if (scanLockRef.current) return;
-    scanLockRef.current = true;
+  const handleScanSuccess = useCallback(
+    (decodedText: string) => {
+      if (scanLockRef.current) return;
+      scanLockRef.current = true;
 
-    console.log("Scanned QR:", decodedText);
-    setScanStatus("QR detected");
-    setScannedData(decodedText);
-    setIsResultDialogOpen(true);
-    onScanSuccessRef.current(decodedText);
+      console.log("Scanned QR:", decodedText);
+      setScanStatus("QR detected");
+      setScannedData(decodedText);
+      setIsResultDialogOpen(true);
+      onScanSuccessRef.current(decodedText);
 
-    try {
-      qrEngineRef.current?.pause(true);
-    } catch (err) {
-      console.debug("Scanner pause skipped:", err);
-    }
-  }, []);
+      void stopScanner();
+    },
+    [stopScanner],
+  );
 
   const startScanner = useCallback(async () => {
     if (isDesktop === null || isDesktop) return;
-    if (isStartingRef.current) return;
-    if (qrEngineRef.current?.isScanning) return;
+    if (isStartingRef.current || qrEngineRef.current?.isScanning) return;
 
-    isStartingRef.current = true;
     setCameraError(null);
     setScanStatus("Starting camera...");
     scanLockRef.current = false;
 
     await stopScanner();
+    isStartingRef.current = true;
 
-    const provider = new Html5Qrcode("qr-reader-target", {
+    const provider = new Html5Qrcode(SCANNER_ELEMENT_ID, {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-      useBarCodeDetectorIfSupported: false,
       verbose: false,
     });
 
@@ -133,38 +137,24 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
 
     const scanConfig = {
       fps: 10,
-      qrbox: { width: 250, height: 250 },
-      disableFlip: false,
+      qrbox: { width: 270, height: 270 },
     };
 
     try {
-      try {
-        await provider.start(
-          { facingMode: "environment" },
-          scanConfig,
-          handleScanSuccess,
-          () => {},
-        );
-      } catch (primaryError) {
-        await provider.start(
-          { facingMode: "user" },
-          scanConfig,
-          handleScanSuccess,
-          () => {},
-        );
-        console.debug(
-          "Rear camera start failed; using front camera.",
-          primaryError,
-        );
-      }
+      await provider.start(
+        { facingMode: "environment" },
+        scanConfig,
+        handleScanSuccess,
+        () => {
+          // Ignore per-frame decode failures while scanning.
+        },
+      );
 
-      setScanStatus("Scanning automatically...");
+      setScanStatus("Scanning...");
     } catch (err) {
       console.error("Camera initialization failed:", err);
-      setScanStatus("Camera unavailable");
-      setCameraError(
-        "Could not access the camera. Check permission then tap Retry Camera.",
-      );
+      setScanStatus("Camera error");
+      setCameraError(toErrorMessage(err));
       await stopScanner();
     } finally {
       isStartingRef.current = false;
@@ -172,17 +162,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
   }, [handleScanSuccess, isDesktop, stopScanner]);
 
   const resumeScannerAfterDialog = useCallback(() => {
-    const provider = qrEngineRef.current;
-
-    if (provider?.isScanning) {
-      try {
-        provider.resume();
-        return;
-      } catch (err) {
-        console.debug("Scanner resume skipped:", err);
-      }
-    }
-
     void startScanner();
   }, [startScanner]);
 
@@ -192,7 +171,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
     if (!open) {
       scanLockRef.current = false;
       setScannedData(null);
-      setScanStatus("Scanning automatically...");
       resumeScannerAfterDialog();
     }
   };
@@ -216,8 +194,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
       </div>
     );
   }
-
-  console.log(scanStatus);
 
   if (isDesktop) {
     return (
@@ -267,9 +243,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         </div>
       ) : (
         <>
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <div className="relative h-[92vw] max-h-88 w-[92vw] max-w-88 rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
-          </div>
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center" />
 
           <div className="absolute top-24 left-1/2 z-30 -translate-x-1/2 rounded-lg bg-black/45 px-4 py-2 backdrop-blur-sm">
             <p className="text-center text-base tracking-[0.18em] text-white/90 uppercase">
@@ -325,19 +299,6 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <style jsx>{`
-        :global(#qr-reader-target #qr-shaded-region) {
-          border: 0 !important;
-          background: transparent !important;
-          outline: none !important;
-        }
-
-        :global(#qr-reader-target #qr-shaded-region > div) {
-          border: 0 !important;
-          box-shadow: none !important;
-        }
-      `}</style>
     </div>
   );
 }
