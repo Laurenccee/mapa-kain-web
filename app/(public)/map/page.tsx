@@ -1,9 +1,12 @@
 import MapDisplay from "@/features/map/components/MapDisplay";
+import { getClaimedBuildingIds } from "@/features/store/utils/claimedBuildings";
 
-export default function MapPage() {
+export default async function MapPage() {
+  const claimedBuildingIds = await getClaimedBuildingIds();
+
   return (
     <section className="h-full w-full">
-      <MapDisplay />
+      <MapDisplay mode="view" claimedBuildingIds={claimedBuildingIds} />
     </section>
   );
 }

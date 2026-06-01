@@ -67,7 +67,11 @@ export async function createProfile(values: ProfileSetupData) {
 
   const validatedFields = ProfileSetupSchema.safeParse(values);
   if (!validatedFields.success) {
-    return { success: false, message: "Please fill in all required fields." };
+    return {
+      success: false,
+      message: "Please fill in all required fields.",
+      errors: validatedFields.error.format(),
+    };
   }
 
   try {
@@ -85,7 +89,10 @@ export async function createProfile(values: ProfileSetupData) {
 
     if (dbError) {
       if (dbError.code === "23505") {
-        return { success: false, message: "This username is already taken." };
+        return {
+          success: false,
+          message: "This username is already taken.",
+        };
       }
       throw dbError;
     }

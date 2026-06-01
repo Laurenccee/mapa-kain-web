@@ -22,7 +22,6 @@ import {
 } from "../schemas/profileSchemas";
 import { createProfile, deleteAvatar, uploadAvatar } from "../actions/profile";
 import { AppImagePicker } from "@/components/shared/AppImagePicker";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 

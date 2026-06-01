@@ -1,29 +1,8 @@
-"use client";
-import MapDisplay from "@/features/map/components/MapDisplay";
-import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
-import RegisterStoreForm from "@/features/store/components/RegisterStoreForm";
-import React, { useState } from "react";
+import StoreRegisterPageClient from "@/features/store/components/StoreRegisterPageClient";
+import { getClaimedBuildingIds } from "@/features/store/utils/claimedBuildings";
 
-export default function StoreRegisterPage() {
-  const [selectedBuilding, setSelectedBuilding] =
-    useState<BuildingSelectionResult | null>(null);
-  return (
-    <section className="grid min-h-screen flex-1 grid-cols-2 items-center justify-center">
-      <div className="col-span-1 flex w-full flex-col items-center justify-center px-8">
-        <div className="flex flex-col gap-8">
-          <div>
-            <h1 className="text-4xl">Tell us about your kitchen.</h1>
-            <p>
-              We'll use this information to create your profile and help locals
-              find your best dishes.
-            </p>
-          </div>
-          <RegisterStoreForm selectedBuilding={selectedBuilding} />
-        </div>
-      </div>
-      <div className="col-span-1 h-full w-full">
-        <MapDisplay onBuildingSelect={setSelectedBuilding} />
-      </div>
-    </section>
-  );
+export default async function StoreRegisterPage() {
+  const claimedBuildingIds = await getClaimedBuildingIds();
+
+  return <StoreRegisterPageClient claimedBuildingIds={claimedBuildingIds} />;
 }

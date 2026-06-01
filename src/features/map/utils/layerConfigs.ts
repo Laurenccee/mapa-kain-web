@@ -1,7 +1,14 @@
 import type { LayerProps } from "@vis.gl/react-maplibre";
 
 // From layerConfigs.ts
-export const getBuildingsLayerConfig = (isDark: boolean): LayerProps => ({
+interface BuildingsLayerOptions {
+  opacity?: number;
+}
+
+export const getBuildingsLayerConfig = (
+  isDark: boolean,
+  options: BuildingsLayerOptions = {},
+): LayerProps => ({
   id: "3d-buildings",
   source: "openmaptiles",
   "source-layer": "building",
@@ -12,7 +19,7 @@ export const getBuildingsLayerConfig = (isDark: boolean): LayerProps => ({
     // ❌ CRASH ENGINE LINE
     "fill-extrusion-height": ["coalesce", ["get", "render_height"], 15] as any,
     "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0] as any,
-    "fill-extrusion-opacity": 0.85,
+    "fill-extrusion-opacity": options.opacity ?? 0.85,
   },
 });
 

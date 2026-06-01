@@ -1,4 +1,3 @@
-// MapDisplay.tsx
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -16,15 +15,25 @@ import { setupGeolocation } from "../utils/geolocation";
 import {
   getBuildingsLayerConfig,
   claimedLayerConfig,
-  highlightedLayerConfig, // Make sure this is exported from layerConfigs.ts
+  highlightedLayerConfig,
 } from "../utils/layerConfigs";
 import type { BuildingSelectionResult } from "../utils/buildingSelection";
 
+type MapMode = "view" | "select";
+
 interface MapDisplayProps {
+  mode?: MapMode;
   onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
+  claimedBuildingIds?: string[];
 }
 
-export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
+export default function MapDisplay({
+  mode = "view",
+  onBuildingSelect,
+  claimedBuildingIds = [],
+}: MapDisplayProps) {
+  const canSelect = mode === "select";
+
   const mapRef = useRef<MapRef>(null);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -44,11 +53,18 @@ export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
     clearSelection,
     claimedGeoJson,
     selectedGeoJson,
-  } = useMapLayers(mapRef, onBuildingSelect);
+  } = useMapLayers(mapRef, {
+    onBuildingSelect,
+    canSelect,
+    claimedBuildingIds,
+  });
 
   const buildingsLayer = useMemo(
-    () => getBuildingsLayerConfig(isDark),
-    [isDark],
+    () =>
+      getBuildingsLayerConfig(isDark, {
+        opacity: canSelect ? 0.85 : 0.5,
+      }),
+    [isDark, canSelect],
   );
 
   useEffect(() => {
@@ -83,8 +99,8 @@ export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
           setHasCachedLocation(false);
 
           setInitialViewState({
-            longitude: longitude,
-            latitude: latitude,
+            longitude,
+            latitude,
             zoom: 16.5,
             pitch: 55,
             bearing: -15,
@@ -124,7 +140,7 @@ export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
           onLoad={handleMapLoad}
           onIdle={handleMapIdle}
           onMoveEnd={handleMoveEnd}
-          onClick={handleMapClick}
+          onClick={canSelect ? handleMapClick : undefined}
         >
           <Layer {...buildingsLayer} />
 
@@ -136,13 +152,24 @@ export default function MapDisplay({ onBuildingSelect }: MapDisplayProps) {
             <Layer {...claimedLayerConfig} />
           </Source>
 
-          <Source id="selected-building" type="geojson" data={selectedGeoJson}>
-            <Layer {...highlightedLayerConfig} />
-          </Source>
+          {canSelect && (
+            <Source
+              id="selected-building"
+              type="geojson"
+              data={selectedGeoJson}
+            >
+              <Layer {...highlightedLayerConfig} />
+            </Source>
+          )}
         </Map>
       )}
 
-      <BuildingClaimCard building={selectedBuilding} onClose={clearSelection} />
+      {canSelect && (
+        <BuildingClaimCard
+          building={selectedBuilding}
+          onClose={clearSelection}
+        />
+      )}
     </div>
   );
 }

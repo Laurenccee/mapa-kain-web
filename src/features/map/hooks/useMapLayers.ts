@@ -1,7 +1,10 @@
-import { useState, useMemo, useCallback, RefObject, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, RefObject } from "react";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import type { FeatureCollection, Polygon, Feature } from "geojson";
-import { queryBuildingAtPoint, type BuildingSelectionResult } from "../utils/buildingSelection";
+import {
+  queryBuildingAtPoint,
+  type BuildingSelectionResult,
+} from "../utils/buildingSelection";
 import { queryClaimedBuildings } from "../utils/claimedBuildings";
 
 interface SelectedBuilding {
@@ -9,10 +12,22 @@ interface SelectedBuilding {
   properties: Record<string, any>;
 }
 
+interface UseMapLayersOptions {
+  onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
+  canSelect?: boolean;
+  claimedBuildingIds?: string[];
+}
+
 export function useMapLayers(
   mapRef: RefObject<MapRef | null>,
-  onBuildingSelect?: (result: BuildingSelectionResult | null) => void,
+  options: UseMapLayersOptions = {},
 ) {
+  const {
+    onBuildingSelect,
+    canSelect = false,
+    claimedBuildingIds = [],
+  } = options;
+
   const [isLayersReady, setIsLayersReady] = useState(false);
   const [selectedBuilding, setSelectedBuilding] =
     useState<SelectedBuilding | null>(null);
@@ -22,23 +37,29 @@ export function useMapLayers(
     [],
   );
 
-  const claimedBuildingIds = useMemo(() => ["bld_122.3600069_11.7147727"], []);
-
-  const syncClaimedLayers = useCallback(
-    (map: any) => {
-      if (map) {
-        const features = queryClaimedBuildings(map, claimedBuildingIds);
-        setClaimedFeatures(features);
-      }
-    },
+  const effectiveClaimedIds = useMemo(
+    () => claimedBuildingIds,
     [claimedBuildingIds],
   );
 
-  // useMapLayers.ts
+  const syncClaimedLayers = useCallback(
+    (map: any) => {
+      if (!map) return;
+      const features = queryClaimedBuildings(map, effectiveClaimedIds);
+      setClaimedFeatures(features);
+    },
+    [effectiveClaimedIds],
+  );
+
+  useEffect(() => {
+    const map = mapRef.current?.getMap?.();
+    if (!map) return;
+    syncClaimedLayers(map);
+  }, [mapRef, syncClaimedLayers]);
+
   const handleMapIdle = useCallback(
     (e: any) => {
       setIsLayersReady(true);
-
       try {
         syncClaimedLayers(e.target);
       } catch (err) {
@@ -55,37 +76,43 @@ export function useMapLayers(
     [syncClaimedLayers],
   );
 
-  const handleMapClick = useCallback((e: any) => {
-    const map = e.target;
-    if (!map) return;
+  const handleMapClick = useCallback(
+    (e: any) => {
+      if (!canSelect) return;
 
-    const result = queryBuildingAtPoint(map, e.point, e.lngLat);
-    if (result) {
-      setSelectedBuilding({
-        id: result.buildingId,
-        properties: result.properties,
-      });
-      setSelectedFeature(result.feature);
-      onBuildingSelect?.(result);
-    } else {
-      setSelectedBuilding(null);
-      setSelectedFeature(null);
-      onBuildingSelect?.(null);
-    }
-  }, [onBuildingSelect]);
+      const map = e.target;
+      if (!map) return;
+
+      const result = queryBuildingAtPoint(map, e.point, e.lngLat);
+      if (result) {
+        setSelectedBuilding({
+          id: result.buildingId,
+          properties: result.properties,
+        });
+        setSelectedFeature(result.feature);
+        onBuildingSelect?.(result);
+      } else {
+        setSelectedBuilding(null);
+        setSelectedFeature(null);
+        onBuildingSelect?.(null);
+      }
+    },
+    [canSelect, onBuildingSelect],
+  );
 
   const clearSelection = useCallback(() => {
+    if (!canSelect) return;
     setSelectedBuilding(null);
     setSelectedFeature(null);
     onBuildingSelect?.(null);
-  }, [onBuildingSelect]);
+  }, [canSelect, onBuildingSelect]);
 
   const selectedGeoJson = useMemo<FeatureCollection>(
     () => ({
       type: "FeatureCollection",
-      features: selectedFeature ? [selectedFeature] : [],
+      features: canSelect && selectedFeature ? [selectedFeature] : [],
     }),
-    [selectedFeature],
+    [canSelect, selectedFeature],
   );
 
   const claimedGeoJson = useMemo<FeatureCollection>(

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues } from "react-hook-form";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
 import {
   InputGroup,
@@ -24,6 +24,8 @@ interface InputFieldProps {
   description?: string;
   error?: string;
   forgetPasswordLink?: boolean;
+  readOnly?: boolean;
+  disabled?: boolean;
 
   leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
@@ -40,6 +42,8 @@ export default function InputField({
   description,
   error,
   forgetPasswordLink,
+  readOnly = false,
+  disabled = false,
   ...rest
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -73,9 +77,10 @@ export default function InputField({
               type={isPassword && showPassword ? "text" : type}
               autoComplete={isPassword ? "current-password" : undefined}
               placeholder={rest.placeholder}
-              disabled={isPending}
+              disabled={isPending || disabled}
               className="placeholder:text-muted-foreground tracking-wide"
               aria-invalid={fieldState.invalid}
+              readOnly={readOnly || disabled}
             />
             {leadingIcon && (
               <InputGroupAddon className="text-muted-foreground/60">

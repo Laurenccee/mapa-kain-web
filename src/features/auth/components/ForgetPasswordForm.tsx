@@ -2,13 +2,7 @@
 
 import InputField from "@/components/shared/InputField";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ArrowLeft02Icon,
-  Email,
-  Loading02Icon,
-  Mail,
-  User03Icon,
-} from "@hugeicons/core-free-icons";
+import { Email, Loading02Icon, User03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTransition } from "react";
 import {
