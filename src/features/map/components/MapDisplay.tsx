@@ -9,7 +9,6 @@ import { useTheme } from "next-themes";
 import { MAPS } from "@/utils/constants/maps";
 import { useMapLayers } from "../hooks/useMapLayers";
 import { MapLoader } from "../components/MapLoader";
-import { BuildingClaimCard } from "../components/BuildingClaimCard";
 
 import { setupGeolocation } from "../utils/geolocation";
 import {
@@ -162,13 +161,6 @@ export default function MapDisplay({
             </Source>
           )}
         </Map>
-      )}
-
-      {canSelect && (
-        <BuildingClaimCard
-          building={selectedBuilding}
-          onClose={clearSelection}
-        />
       )}
     </div>
   );
