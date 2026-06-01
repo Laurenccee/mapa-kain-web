@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
-import AuthProvider from './AuthProvider';
+import { createClient } from "@/lib/supabase/server";
+import AuthProvider from "./AuthProvider";
 
 export default async function SessionProvider({
   children,
@@ -12,23 +12,19 @@ export default async function SessionProvider({
   } = await supabase.auth.getUser();
 
   let profile = null;
-  let establishment = null;
+  let store = null;
 
   if (user) {
-    const [profileRes, establishmentRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase
-        .from('establishments')
-        .select('*')
-        .eq('owner_id', user.id)
-        .single(),
+    const [profileRes, storeRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
+      supabase.from("stores").select("*").eq("owner_id", user.id).single(),
     ]);
 
     profile = profileRes.data;
-    establishment = establishmentRes.data;
+    store = storeRes.data;
   }
 
-  const initialData = { user, profile, establishment };
+  const initialData = { user, profile, store };
 
   return <AuthProvider initialData={initialData}>{children}</AuthProvider>;
 }

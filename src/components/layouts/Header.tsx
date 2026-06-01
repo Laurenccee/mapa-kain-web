@@ -9,6 +9,7 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import { ROUTES } from "@/utils/constants/routes";
 import { usePathname } from "next/navigation";
+import BackButton from "../shared/BackButton";
 
 interface HeaderProps {
   className?: string;
@@ -24,7 +25,10 @@ export default function Header({ className }: HeaderProps) {
     ROUTES.PROFILE_EDIT,
     ROUTES.SIGN_IN,
     ROUTES.STORE_REGISTER,
+    ROUTES.QR_SCAN,
   ];
+
+  const IS_QR_PAGES = pathname === ROUTES.QR_SCAN || pathname === ROUTES.MY_QR;
 
   return (
     <header
@@ -37,6 +41,7 @@ export default function Header({ className }: HeaderProps) {
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between">
+        {IS_QR_PAGES && <BackButton />}
         <div className="flex items-center gap-2">
           <Link href={ROUTES.ROOT} className="text-lg tracking-tight">
             MapaKain
@@ -45,12 +50,16 @@ export default function Header({ className }: HeaderProps) {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {isAuthenticated ? (
-            <SignOutButton />
-          ) : (
-            <Button asChild className="h-9 px-4">
-              <Link href={ROUTES.SIGN_IN}>Sign In</Link>
-            </Button>
+          {!IS_QR_PAGES && (
+            <>
+              {isAuthenticated ? (
+                <SignOutButton />
+              ) : (
+                <Button asChild className="h-9 px-4">
+                  <Link href={ROUTES.SIGN_IN}>Sign In</Link>
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -6,8 +6,8 @@ export const ROUTES = {
   EMAIL_VERIFICATION: "/email-verification",
   RESET_PASSWORD: "/reset-password",
 
-  QR_SCAN: "/qr-scan",
-  MY_QR: "/my-qr",
+  QR_SCAN: "/scanner",
+  MY_QR: "/qr",
 
   MAP: "/map",
   FEED: "/feed",

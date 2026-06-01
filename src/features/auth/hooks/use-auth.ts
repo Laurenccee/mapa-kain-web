@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useContext } from 'react';
-import { AuthContext } from '../provider/AuthProvider';
+import { useContext } from "react";
+import { AuthContext } from "../provider/AuthProvider";
 
 export function useAuth() {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error('useAuth must be used within SessionProvider');
+    throw new Error("useAuth must be used within SessionProvider");
   }
 
   return {
@@ -15,11 +15,11 @@ export function useAuth() {
     isLoading: false,
     isAuthenticated: !!context.user,
     hasProfile: !!context.profile,
-    hasEstablishment: !!context.establishment,
+    hasStore: !!context.store,
 
     userId: context.user?.id,
 
     profile: context.profile,
-    establishment: context.establishment,
+    store: context.store,
   };
 }

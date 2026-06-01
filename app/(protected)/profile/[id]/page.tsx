@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/card";
 import ProfileSection from "@/features/profile/components/ProfileSection";
 import StampsSection from "@/features/profile/components/StampsSection";
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import StoreCard from "@/features/profile/components/StoreCard";
 import Link from "next/link";
 
 const sectionTitleClassName = "text-lg sm:text-xl";
@@ -25,31 +24,7 @@ export default function ProfilePage() {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8">
         <ProfileSection />
 
-        <Card className="bg-primary">
-          <CardContent className="flex flex-col gap-4 p-4 sm:p-6">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-primary-foreground font-heading text-lg font-semibold tracking-tight sm:text-xl">
-                Own a Carinderia?
-              </h2>
-              <p className="text-primary-foreground/90 text-sm leading-relaxed sm:text-base">
-                Register your store today to join the MapaKain community. Reach
-                more food lovers and reward your most loyal customers with our
-                artisanal Suki program.
-              </p>
-            </div>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="w-full sm:w-fit"
-              asChild
-            >
-              <Link href="/store/register">
-                Register Your Store
-                <HugeiconsIcon icon={ArrowRight01Icon} />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <StoreCard />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5 lg:gap-8">
           <StampsSection />

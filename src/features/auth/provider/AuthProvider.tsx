@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { createContext, useEffect, useState, ReactNode, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { AuthState } from '../types';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { createContext, useEffect, useState, ReactNode, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { AuthState } from "../types";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 export const AuthContext = createContext<AuthState | undefined>(undefined);
 
@@ -31,42 +31,35 @@ export default function AuthProvider({
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          // If the user changed or it's a completely brand new session login
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
           if (session.user.id !== state.user?.id) {
             setIsLoading(true);
 
-            // Fetch the missing custom database relationships asynchronously on the client layer
-            const [profileRes, establishmentRes] = await Promise.all([
+            const [profileRes, storeRes] = await Promise.all([
               supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
+                .from("profiles")
+                .select("*")
+                .eq("id", session.user.id)
                 .single(),
               supabase
-                .from('stores')
-                .select(
-                  `
-                  *,
-                  store_members!inner(user_id)
-                `,
-                )
-                .eq('store_members.user_id', session.user.id),
+                .from("stores")
+                .select("*")
+                .eq("owner_id", session.user.id),
             ]);
 
             setState({
               user: session.user,
               profile: profileRes.data ?? null,
-              establishment: establishmentRes.data ?? null,
+              store: storeRes.data ?? null,
             });
           } else if (!ssrDataConsumed.current) {
             ssrDataConsumed.current = true;
           }
-        } else if (event === 'SIGNED_OUT') {
+        } else if (event === "SIGNED_OUT") {
           setState({
             user: null,
             profile: null,
-            establishment: null,
+            store: null,
           });
         }
 
