@@ -21,6 +21,7 @@ import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection"
 import { registerStoreAction } from "../actions/store";
 import { ROUTES } from "@/utils/constants/routes";
 import { useRouter } from "next/navigation";
+import { AppImagePicker } from "@/components/shared/AppImagePicker";
 
 interface RegisterStoreFormProps {
   selectedBuilding: BuildingSelectionResult | null;
@@ -38,6 +39,7 @@ export default function RegisterStoreForm({
     useForm<RegisterStoreData>({
       resolver: zodResolver(RegisterStoreSchema),
       defaultValues: {
+        image_url: null,
         name: "",
         openTime: "",
         closeTime: "",
@@ -85,6 +87,7 @@ export default function RegisterStoreForm({
       className="flex flex-col gap-4"
       onSubmit={handleSubmit(handleRegisterStore)}
     >
+      <AppImagePicker name="image_url" control={control} variant="menu" />
       <div className="flex flex-col gap-2">
         <InputField
           label="Building ID"

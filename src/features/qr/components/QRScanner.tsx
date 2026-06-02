@@ -251,7 +251,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
             </p>
           </div>
 
-          <div className="absolute right-0 bottom-8 left-0 z-30 flex justify-center px-6">
+          <div className="absolute right-0 bottom-16 left-0 z-30 flex justify-center px-6">
             <Button
               asChild
               variant="secondary"

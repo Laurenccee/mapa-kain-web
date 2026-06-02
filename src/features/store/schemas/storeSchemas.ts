@@ -21,6 +21,7 @@ export const RegisterStoreSchema = z.object({
   closeTime: TimeSchema,
   description: z.string().trim().max(1000).optional(),
   buildingId: BuildingIdSchema,
+  image_url: z.string().url().optional().nullable(),
 });
 
 export type RegisterStoreData = z.infer<typeof RegisterStoreSchema>;

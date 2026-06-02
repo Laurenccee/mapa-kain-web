@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -6,6 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Plus } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 
 export default function StampsSection() {
   return (
@@ -28,6 +32,16 @@ export default function StampsSection() {
                 className="border-border bg-accent aspect-square rounded-full border border-dashed"
               ></div>
             ))}
+          </CardContent>
+        </Card>
+        <Card className="border-muted border-2 border-dashed bg-transparent ring-0">
+          <CardContent className="flex h-full flex-col items-center justify-center gap-2">
+            <p className="text-sm">Add more stores to collect stamps!</p>
+            <Button variant="outline" size="icon-lg">
+              <Link href="/map">
+                <HugeiconsIcon icon={Plus} />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

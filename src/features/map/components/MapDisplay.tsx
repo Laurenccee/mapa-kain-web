@@ -24,12 +24,14 @@ interface MapDisplayProps {
   mode?: MapMode;
   onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
   claimedBuildingIds?: string[];
+  selectClaimedOnly?: boolean;
 }
 
 export default function MapDisplay({
   mode = "view",
   onBuildingSelect,
   claimedBuildingIds = [],
+  selectClaimedOnly = false,
 }: MapDisplayProps) {
   const canSelect = mode === "select";
 
@@ -56,6 +58,7 @@ export default function MapDisplay({
     onBuildingSelect,
     canSelect,
     claimedBuildingIds,
+    selectClaimedOnly,
   });
 
   const buildingsLayer = useMemo(

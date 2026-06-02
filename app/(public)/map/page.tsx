@@ -1,12 +1,14 @@
-import MapDisplay from "@/features/map/components/MapDisplay";
-import { getClaimedBuildingIds } from "@/features/store/utils/claimedBuildings";
+import PublicMapPageClient from "@/features/map/components/PublicMapPageClient";
+import { getClaimedStores } from "@/features/store/utils/claimedBuildings";
 
 export default async function MapPage() {
-  const claimedBuildingIds = await getClaimedBuildingIds();
+  const claimedStores = await getClaimedStores();
+  const claimedBuildingIds = claimedStores.map((store) => store.building_id);
 
   return (
-    <section className="h-full w-full">
-      <MapDisplay mode="view" claimedBuildingIds={claimedBuildingIds} />
-    </section>
+    <PublicMapPageClient
+      claimedBuildingIds={claimedBuildingIds}
+      claimedStores={claimedStores}
+    />
   );
 }

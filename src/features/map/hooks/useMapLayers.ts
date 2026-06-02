@@ -16,6 +16,7 @@ interface UseMapLayersOptions {
   onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
   canSelect?: boolean;
   claimedBuildingIds?: string[];
+  selectClaimedOnly?: boolean;
 }
 
 export function useMapLayers(
@@ -26,6 +27,7 @@ export function useMapLayers(
     onBuildingSelect,
     canSelect = false,
     claimedBuildingIds = [],
+    selectClaimedOnly = false,
   } = options;
 
   const [isLayersReady, setIsLayersReady] = useState(false);
@@ -85,6 +87,16 @@ export function useMapLayers(
 
       const result = queryBuildingAtPoint(map, e.point, e.lngLat);
       if (result) {
+        if (
+          selectClaimedOnly &&
+          !effectiveClaimedIds.includes(result.buildingId)
+        ) {
+          setSelectedBuilding(null);
+          setSelectedFeature(null);
+          onBuildingSelect?.(null);
+          return;
+        }
+
         setSelectedBuilding({
           id: result.buildingId,
           properties: result.properties,
@@ -97,7 +109,7 @@ export function useMapLayers(
         onBuildingSelect?.(null);
       }
     },
-    [canSelect, onBuildingSelect],
+    [canSelect, onBuildingSelect, selectClaimedOnly, effectiveClaimedIds],
   );
 
   const clearSelection = useCallback(() => {
