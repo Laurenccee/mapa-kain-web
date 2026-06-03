@@ -53,87 +53,91 @@ export default function InputField({
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <div className="text-accent-foreground flex justify-between">
-            {label && (
-              <FieldLabel className="text-sm sm:text-sm" htmlFor={field.name}>
-                {label}
-              </FieldLabel>
-            )}
-            {isPassword && forgetPasswordLink && (
-              <Link
-                href={ROUTES.FORGET_PASSWORD}
-                className="hover:text-foreground text-sm hover:underline"
-              >
-                Forgot password?
-              </Link>
-            )}
-          </div>
+      render={({ field, fieldState }) => {
+        const fieldErrorMessage = error || fieldState.error?.message;
 
-          <InputGroup className="transition-all">
-            <InputGroupInput
-              {...field}
-              type={isPassword && showPassword ? "text" : type}
-              autoComplete={isPassword ? "current-password" : undefined}
-              placeholder={rest.placeholder}
-              disabled={isPending || disabled}
-              className="placeholder:text-muted-foreground tracking-wide"
-              aria-invalid={fieldState.invalid}
-              readOnly={readOnly || disabled}
-            />
-            {leadingIcon && (
-              <InputGroupAddon className="text-muted-foreground/60">
-                {leadingIcon}
-              </InputGroupAddon>
-            )}
-            {isPassword ? (
-              <InputGroupAddon align="inline-end">
-                <InputGroupButton
-                  type="button"
-                  tabIndex={-1}
-                  className="pr-0.5 hover:bg-transparent"
-                  onClick={() => setShowPassword((v) => !v)}
+        return (
+          <Field data-invalid={fieldState.invalid}>
+            <div className="text-accent-foreground flex justify-between">
+              {label && (
+                <FieldLabel className="text-sm sm:text-sm" htmlFor={field.name}>
+                  {label}
+                </FieldLabel>
+              )}
+              {isPassword && forgetPasswordLink && (
+                <Link
+                  href={ROUTES.FORGET_PASSWORD}
+                  className="hover:text-foreground text-sm hover:underline"
                 >
-                  {showPassword ? (
-                    <HugeiconsIcon
-                      icon={ViewIcon}
-                      color="currentColor"
-                      strokeWidth={1.5}
-                    />
-                  ) : (
-                    <HugeiconsIcon
-                      icon={ViewOffIcon}
-                      color="currentColor"
-                      strokeWidth={1.5}
-                    />
-                  )}
-                </InputGroupButton>
-              </InputGroupAddon>
-            ) : (
-              trailingIcon && (
-                <InputGroupAddon
-                  align="inline-end"
-                  className="text-muted-foreground/60"
-                >
-                  {trailingIcon}
+                  Forgot password?
+                </Link>
+              )}
+            </div>
+
+            <InputGroup className="transition-all">
+              <InputGroupInput
+                {...field}
+                type={isPassword && showPassword ? "text" : type}
+                autoComplete={isPassword ? "current-password" : undefined}
+                placeholder={rest.placeholder}
+                disabled={isPending || disabled}
+                className="placeholder:text-muted-foreground tracking-wide"
+                aria-invalid={fieldState.invalid}
+                readOnly={readOnly || disabled}
+              />
+              {leadingIcon && (
+                <InputGroupAddon className="text-muted-foreground/60">
+                  {leadingIcon}
                 </InputGroupAddon>
-              )
-            )}
-          </InputGroup>
+              )}
+              {isPassword ? (
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    type="button"
+                    tabIndex={-1}
+                    className="pr-0.5 hover:bg-transparent"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <HugeiconsIcon
+                        icon={ViewIcon}
+                        color="currentColor"
+                        strokeWidth={1.5}
+                      />
+                    ) : (
+                      <HugeiconsIcon
+                        icon={ViewOffIcon}
+                        color="currentColor"
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              ) : (
+                trailingIcon && (
+                  <InputGroupAddon
+                    align="inline-end"
+                    className="text-muted-foreground/60"
+                  >
+                    {trailingIcon}
+                  </InputGroupAddon>
+                )
+              )}
+            </InputGroup>
 
-          {description && (
-            <FieldDescription className="text-muted-foreground text-xs tracking-[0.2em]">
-              {description}
-            </FieldDescription>
-          )}
-          {error && (
-            <FieldError className="font-mono text-xs font-semibold tracking-[0.2em] text-red-500">
-              {error}
-            </FieldError>
-          )}
-        </Field>
-      )}
+            {description && (
+              <FieldDescription className="text-muted-foreground text-xs tracking-[0.2em]">
+                {description}
+              </FieldDescription>
+            )}
+            {fieldErrorMessage && (
+              <FieldError className="text-xs font-semibold tracking-[0.2em] text-red-500">
+                {fieldErrorMessage}
+              </FieldError>
+            )}
+          </Field>
+        );
+      }}
     />
   );
 }

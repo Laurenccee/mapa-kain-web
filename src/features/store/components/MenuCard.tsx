@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import UpdateMenuDialog from "./UpdateMenuDialog";
+import { MenuItemRecord } from "../types/menu";
 
 interface MenuCardProps {
   image_url: string;
@@ -15,6 +15,8 @@ interface MenuCardProps {
   price: number;
   description: string;
   available: boolean;
+  showEditButton?: boolean;
+  menuItem?: MenuItemRecord;
 }
 
 export default function MenuCard({
@@ -23,8 +25,19 @@ export default function MenuCard({
   price,
   description,
   available: initialAvailable,
+  showEditButton,
+  menuItem,
 }: MenuCardProps) {
   const [available, setAvailable] = useState(initialAvailable);
+  const imageSrc = image_url || "/placeholder/food_1.png";
+
+  const pathname = usePathname();
+  const IN_STORE = pathname.includes("/store/");
+  const shouldShowEditButton = showEditButton ?? IN_STORE;
+
+  useEffect(() => {
+    setAvailable(initialAvailable);
+  }, [initialAvailable]);
 
   return (
     <Card className="relative col-span-1 overflow-hidden pt-0">
@@ -33,7 +46,15 @@ export default function MenuCard({
       >
         {available ? "Available" : "Not Available"}
       </Badge>
-      <Image src={image_url} alt={name} width={300} height={200} />
+      <div className="relative aspect-video w-full">
+        <Image
+          src={imageSrc}
+          alt={name || "Menu image"}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, 340px"
+        />
+      </div>
       <CardContent className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">{name}</h2>
@@ -45,16 +66,17 @@ export default function MenuCard({
           {description}
         </p>
       </CardContent>
-      <CardFooter className="flex items-center gap-4">
-        <Button variant="default" size="lg" className="flex-1">
-          Edit Menu
-        </Button>
-        <Switch
-          id="menu-availability"
-          checked={available}
-          onCheckedChange={setAvailable}
-        />
-      </CardFooter>
+      {shouldShowEditButton && (
+        <CardFooter>
+          {menuItem ? (
+            <UpdateMenuDialog menuItem={menuItem} />
+          ) : (
+            <Button variant="default" size="lg" className="flex-1">
+              Edit Menu
+            </Button>
+          )}
+        </CardFooter>
+      )}
     </Card>
   );
 }

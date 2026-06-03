@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
+"use client";
+
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import React from "react";
 
 export default function StoreProfile() {
   const { store, profile } = useAuth();
