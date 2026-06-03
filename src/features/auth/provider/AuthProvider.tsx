@@ -1,11 +1,20 @@
 "use client";
 
-import { createContext, useEffect, useState, ReactNode, useRef } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useRef,
+  useMemo,
+} from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AuthState } from "../types";
+import { AuthContextType, AuthState } from "../types";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
-export const AuthContext = createContext<AuthState | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export default function AuthProvider({
   children,
@@ -17,10 +26,8 @@ export default function AuthProvider({
   const [state, setState] = useState<AuthState>(initialData);
   const [isLoading, setIsLoading] = useState(!initialData.user);
   const supabase = createClient();
-
   const ssrDataConsumed = useRef(false);
 
-  // Keeps the Client State in sync when Server Components push down a fresh layout tree
   useEffect(() => {
     setState(initialData);
     if (initialData.user) setIsLoading(false);
@@ -70,5 +77,19 @@ export default function AuthProvider({
     return () => subscription.unsubscribe();
   }, [supabase, state.user?.id]);
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      ...state,
+      isLoading,
+      user_id: state.user?.id,
+      isAuthenticated: !!state.user,
+      hasProfile: !!state.profile,
+      hasStore: !!state.store,
+    }),
+    [state, isLoading],
+  );
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 }

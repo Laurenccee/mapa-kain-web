@@ -2,20 +2,20 @@ import CreateMenuDialog from "./CreateMenuDialog";
 import MenuCard from "./MenuCard";
 import { getMenuItemsAction } from "../actions/menu";
 import { MenuSectionProps } from "../types/menu";
-import UpdateMenuDialog from "./UpdateMenuDialog";
 
 export default async function MenuSection({ storeId }: MenuSectionProps) {
   const result = await getMenuItemsAction(storeId);
-  const menuItems = result.data;
+  // Fallback to empty array if data is missing or undefined to prevent crashes
+  const menuItems = result.data ?? [];
 
   return (
-    <div className="col-span-1 grid-cols-4 sm:col-span-5">
+    <div className="w-full">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h1>Daily Menu</h1>
+          <h1 className="text-foreground text-lg font-semibold">Daily Menu</h1>
           <CreateMenuDialog />
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {menuItems.map((menuItem) => (
             <MenuCard
               key={menuItem.id}
@@ -25,7 +25,6 @@ export default async function MenuSection({ storeId }: MenuSectionProps) {
               description={menuItem.description ?? ""}
               available={menuItem.is_available}
               menuItem={menuItem}
-              actionButton={<UpdateMenuDialog menuItem={menuItem} />}
             />
           ))}
 

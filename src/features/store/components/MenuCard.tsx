@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePathname } from "next/navigation";
-import UpdateMenuDialog from "./UpdateMenuDialog";
 import { MenuItemRecord } from "../types/menu";
 
 interface MenuCardProps {
@@ -17,6 +16,8 @@ interface MenuCardProps {
   available: boolean;
   showEditButton?: boolean;
   menuItem?: MenuItemRecord;
+
+  actionButton?: React.ReactNode;
 }
 
 export default function MenuCard({
@@ -27,6 +28,7 @@ export default function MenuCard({
   available: initialAvailable,
   showEditButton,
   menuItem,
+  actionButton,
 }: MenuCardProps) {
   const [available, setAvailable] = useState(initialAvailable);
   const imageSrc = image_url || "/placeholder/food_1.png";
@@ -66,16 +68,8 @@ export default function MenuCard({
           {description}
         </p>
       </CardContent>
-      {shouldShowEditButton && (
-        <CardFooter>
-          {menuItem ? (
-            <UpdateMenuDialog menuItem={menuItem} />
-          ) : (
-            <Button variant="default" size="lg" className="flex-1">
-              Edit Menu
-            </Button>
-          )}
-        </CardFooter>
+      {shouldShowEditButton && actionButton && (
+        <CardFooter>{actionButton}</CardFooter>
       )}
     </Card>
   );

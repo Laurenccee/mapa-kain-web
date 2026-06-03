@@ -24,7 +24,9 @@ export default async function SessionProvider({
     store = storeRes.data;
   }
 
-  const initialData = { user, profile, store };
-
-  return <AuthProvider initialData={initialData}>{children}</AuthProvider>;
+  return (
+    <AuthProvider initialData={{ user, profile, store }}>
+      {children}
+    </AuthProvider>
+  );
 }

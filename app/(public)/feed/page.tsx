@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import FavoritesSection from "@/features/feed/components/FavoritesSection";
+import NearYouSection from "@/features/feed/components/NearYouSection";
 
 export default function Feed() {
   const { isAuthenticated } = useAuth();
@@ -8,7 +10,7 @@ export default function Feed() {
   return (
     <main className="space-y-6 pb-20">
       {/* 1. Near You Section - Visible to All */}
-      {/* <NearYouSection /> */}
+      <NearYouSection />
 
       {/* 2. Top Carinderias Section - Visible to All */}
       {/* <TopRatedSection /> */}
@@ -16,8 +18,8 @@ export default function Feed() {
       {/* 3. Favorites Section - Context Gated */}
       <div className="px-4">
         <h3 className="mb-3 font-serif text-lg">My Favorites</h3>
+        <FavoritesSection />
         {/* {isAuthenticated ? (
-          <FavoritesSection />
         ) : (
           <FavoritesTeaser />
         )} */}

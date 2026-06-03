@@ -1,7 +1,7 @@
 "use client";
 
 import InputField from "@/components/shared/InputField";
-import { User03Icon } from "@hugeicons/core-free-icons";
+import { Loading02Icon, User03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useEffect, useTransition } from "react";
 import { MenuData, MenuFormData, MenuSchema } from "../schemas/menuSchema";
@@ -185,8 +185,11 @@ export default function UpdateMenuForm({
           )}
         />
       </div>
-      <Button form={formId} size="lg">
+      <Button form={formId} size="lg" disabled={isPending}>
         {isPending ? "Updating..." : "Update Menu"}
+        {isPending && (
+          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
+        )}
       </Button>
     </form>
   );

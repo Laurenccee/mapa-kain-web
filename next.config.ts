@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Target your service worker path safely
         source: "/map-sw.js",
         headers: [
           {

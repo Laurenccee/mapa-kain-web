@@ -2,11 +2,12 @@ import type { User } from "@supabase/supabase-js";
 
 export type AuthState = {
   user: User | null;
-  profile: any | null; // Replace 'any' with your Profile type
-  store: any | null; // Replace 'any' with your Establishment type
+  profile: any | null;
+  store: any | null;
 };
 
 export type AuthContextType = AuthState & {
+  user_id: string | undefined;
   isLoading: boolean;
   isAuthenticated: boolean;
   hasProfile: boolean;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; // 🚀 Import Next.js hooks
 
 import {
   Sheet,
@@ -12,29 +13,22 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
 import type { ClaimedStore } from "@/features/store/types/claimedStore";
+import Image from "next/image";
 
 import MapDisplay from "./MapDisplay";
+import { PublicMapPageClientProps } from "../types/building";
+import StoreSheet from "@/features/store/components/StoreSheet";
 
-interface PublicMapPageClientProps {
-  claimedBuildingIds: string[];
-  claimedStores: ClaimedStore[];
-}
-
-function formatStoreTime(value: string) {
-  const [hours, minutes] = value.split(":");
-  if (!hours || !minutes) {
-    return value;
-  }
-
-  return `${hours}:${minutes}`;
-}
+// Add new type support for props forwarded down from server page wrapper
 
 export default function PublicMapPageClient({
   claimedBuildingIds,
   claimedStores,
+  storeId,
+  children,
 }: PublicMapPageClientProps) {
-  const isMobile = useIsMobile();
-  const [selectedStore, setSelectedStore] = useState<ClaimedStore | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const storesByBuildingId = useMemo(
     () =>
@@ -46,23 +40,30 @@ export default function PublicMapPageClient({
     [claimedStores],
   );
 
+  const currentStoreData = useMemo(() => {
+    if (!storeId) return null;
+    return claimedStores.find((s) => s.id === storeId) || null;
+  }, [storeId, claimedStores]);
+
   const handleBuildingSelect = useCallback(
     (result: BuildingSelectionResult | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+
       if (!result) {
-        setSelectedStore(null);
-        return;
+        params.delete("storeId");
+      } else {
+        const store = storesByBuildingId.get(result.buildingId);
+        if (store) {
+          params.set("storeId", store.id);
+        } else {
+          params.delete("storeId");
+        }
       }
 
-      setSelectedStore(storesByBuildingId.get(result.buildingId) ?? null);
+      router.push(`?${params.toString()}`, { scroll: false });
     },
-    [storesByBuildingId],
+    [router, searchParams, storesByBuildingId],
   );
-
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setSelectedStore(null);
-    }
-  }, []);
 
   return (
     <section className="relative h-full w-full">
@@ -72,61 +73,9 @@ export default function PublicMapPageClient({
         selectClaimedOnly
         onBuildingSelect={handleBuildingSelect}
       />
-
-      <Sheet open={Boolean(selectedStore)} onOpenChange={handleSheetOpenChange}>
-        <SheetContent
-          side={isMobile ? "bottom" : "left"}
-          className={
-            isMobile
-              ? "overflow-y-auto data-[side=bottom]:h-[92dvh] data-[side=bottom]:max-h-[92dvh] data-[side=bottom]:rounded-t-2xl"
-              : "w-[92vw] overflow-y-auto data-[side=left]:sm:max-w-120 data-[side=right]:sm:max-w-120"
-          }
-        >
-          <SheetHeader>
-            <SheetTitle>{selectedStore?.name ?? "Building Details"}</SheetTitle>
-            <SheetDescription>
-              Information about the selected claimed building.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="space-y-4 px-4 pb-6">
-            {selectedStore ? (
-              <>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                    Building ID
-                  </p>
-                  <p className="text-sm">{selectedStore.building_id}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                    Hours
-                  </p>
-                  <p className="text-sm">
-                    {formatStoreTime(selectedStore.open_time)} -{" "}
-                    {formatStoreTime(selectedStore.close_time)}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                    Description
-                  </p>
-                  <p className="text-sm leading-relaxed">
-                    {selectedStore.description?.trim() ||
-                      "No description provided yet."}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Select a claimed building to view store details.
-              </p>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <StoreSheet storeId={storeId} currentStoreData={currentStoreData}>
+        {children}
+      </StoreSheet>
     </section>
   );
 }

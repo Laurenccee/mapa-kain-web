@@ -1,7 +1,7 @@
 "use client";
 
 import InputField from "@/components/shared/InputField";
-import { User03Icon } from "@hugeicons/core-free-icons";
+import { Loading02Icon, User03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useEffect, useTransition } from "react";
 import { MenuData, MenuFormData, MenuSchema } from "../schemas/menuSchema";
@@ -173,8 +173,11 @@ export default function CreateMenuForm({
           )}
         />
       </div>
-      <Button form="create-menu-form" size="lg">
+      <Button form="create-menu-form" size="lg" disabled={isPending}>
         {isPending ? "Creating..." : "Create Menu"}
+        {isPending && (
+          <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
+        )}
       </Button>
     </form>
   );
