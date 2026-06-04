@@ -61,6 +61,19 @@ export default function RootLayout({
           <SessionProvider>{children}</SessionProvider>
           <Toaster theme="system" />
         </ThemeProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/map-sw.js')
+                    .then(reg => console.log('PWA Service Worker Registered!', reg.scope))
+                    .catch(err => console.error('Service Worker Registry Failed:', err));
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
