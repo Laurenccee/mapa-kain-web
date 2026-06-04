@@ -1,9 +1,10 @@
-import Header from "@/components/layouts/Header";
-import SignOutButton from "@/components/shared/SignOutButton";
-import ProfileEditForm from "@/features/profile/components/ProfileEditForm";
-import ProfileSetupForm from "@/features/profile/components/ProfileSetupForm";
+import { guardServerAction } from "@/features/auth/utils/serverAuth";
+import ProfileForm from "@/features/profile/components/ProfileForm";
+import { getProfileOnServer } from "@/features/profile/utils/serverProfile";
 
-export default function EditProfilePage() {
+export default async function EditProfilePage() {
+  const profile = await getProfileOnServer();
+
   return (
     <section className="flex h-full w-full flex-1 flex-col items-center justify-center gap-8 px-4">
       <div className="flex w-full flex-col gap-8 sm:max-w-xs">
@@ -17,7 +18,16 @@ export default function EditProfilePage() {
           </p>
         </div>
         <div className="flex flex-col gap-4">
-          <ProfileEditForm />
+          <ProfileForm
+            mode="update"
+            profileId={profile.id}
+            defaultValues={{
+              full_name: profile.full_name,
+              username: profile.username,
+              phone_number: profile.phone_number,
+              avatar_url: profile.avatar_url,
+            }}
+          />
         </div>
       </div>
     </section>

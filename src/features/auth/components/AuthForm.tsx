@@ -1,12 +1,10 @@
 "use client";
 
-import InputField from "@/components/shared/InputField";
-import { Button } from "@/components/ui/button";
-import { SignUpData, SignUpSchema } from "../schemas/authSchema";
-
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
+import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight02Icon,
@@ -14,48 +12,63 @@ import {
   LockPasswordIcon,
   User03Icon,
 } from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
-import { signUpAction } from "../actions/auth";
-import PasswordRulesCard from "../../../components/shared/PasswordRuleCard";
-import { ROUTES } from "@/utils/constants/routes";
-import { useRouter } from "next/navigation";
 
-export default function SignUpForm() {
-  const [isPending, startTransistion] = useTransition();
+import InputField from "@/components/shared/InputField";
+import { Button } from "@/components/ui/button";
+import PasswordRulesCard from "../../../components/shared/PasswordRuleCard";
+import FormActions from "./FormActions";
+
+import { SignInData, SignUpData } from "../schemas/authSchema";
+import { AuthFormProps } from "../types";
+
+export default function AuthForm({
+  mode,
+  schema,
+  action,
+  onSuccessRoute,
+  successMessage,
+  errorMessage,
+}: AuthFormProps) {
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const { control, handleSubmit } = useForm<SignUpData>({
-    resolver: zodResolver(SignUpSchema),
+  const isSignIn = mode === "sign-in";
+
+  const { control, handleSubmit, setValue } = useForm<SignInData | SignUpData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       email: "",
       password: "",
-    },
+      ...(isSignIn && { rememberMe: true }),
+    } as any,
   });
 
-  const handleSignUp: SubmitHandler<SignUpData> = async (data) => {
-    startTransistion(async () => {
+  const rememberMeValue = useWatch({ control, name: "rememberMe" });
+  const passwordValue = useWatch({ control, name: "password" }) || "";
+
+  const handleAuthSubmit: SubmitHandler<any> = async (data) => {
+    startTransition(async () => {
       try {
-        const result = await signUpAction(data);
+        const result = await action(data);
 
         if (result?.success === false) {
-          toast.error(result.message || "An error occurred during sign in.");
+          toast.error(result.message || errorMessage);
           return;
         }
-        toast.success("Account created successfully!");
-        router.replace(ROUTES.SIGN_IN);
+
+        toast.success(successMessage);
+        router.replace(onSuccessRoute);
       } catch (error) {
-        toast.error("An error occurred during sign up.");
+        toast.error(errorMessage);
       }
     });
   };
 
-  const passwordValue = useWatch({ control, name: "password" }) || "";
-
   return (
     <form
-      id="sign-up-form"
+      id={`${mode}-form`}
       className="flex flex-col gap-4"
-      onSubmit={handleSubmit(handleSignUp)}
+      onSubmit={handleSubmit(handleAuthSubmit)}
     >
       <div className="flex flex-col gap-2">
         <InputField
@@ -89,15 +102,31 @@ export default function SignUpForm() {
           }
         />
       </div>
-      <PasswordRulesCard password={passwordValue} />
+
+      {/* Conditional UI additions based on form mode */}
+      {isSignIn ? (
+        <FormActions
+          rememberMe={!!rememberMeValue}
+          onRememberMeChange={(val) => setValue("rememberMe", val)}
+        />
+      ) : (
+        <PasswordRulesCard password={passwordValue} />
+      )}
+
       <Button
-        form="sign-up-form"
+        form={`${mode}-form`}
         size="lg"
         type="submit"
         className="w-full"
         disabled={isPending}
       >
-        {isPending ? "Creating Account..." : "Create Account"}
+        {isSignIn
+          ? isPending
+            ? "Signing in..."
+            : "Sign in to your account"
+          : isPending
+            ? "Creating Account..."
+            : "Create Account"}
         {isPending ? (
           <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (

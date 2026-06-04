@@ -6,19 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePathname } from "next/navigation";
-import { MenuItemRecord } from "../types/menu";
-
-interface MenuCardProps {
-  image_url: string;
-  name: string;
-  price: number;
-  description: string;
-  available: boolean;
-  showEditButton?: boolean;
-  menuItem?: MenuItemRecord;
-
-  actionButton?: React.ReactNode;
-}
+import { MenuCardProps, MenuItemRecord } from "../../types/menu";
 
 export default function MenuCard({
   image_url,

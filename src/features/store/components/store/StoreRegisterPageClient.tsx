@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import MapDisplay from "@/features/map/components/MapDisplay";
 import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
-import RegisterStoreForm from "@/features/store/components/RegisterStoreForm";
+import RegisterStoreForm from "@/features/store/components/store/RegisterStoreForm";
 
 interface StoreRegisterPageClientProps {
   claimedBuildingIds: string[];

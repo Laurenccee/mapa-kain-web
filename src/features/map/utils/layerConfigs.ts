@@ -16,7 +16,6 @@ export const getBuildingsLayerConfig = (
   minzoom: 14,
   paint: {
     "fill-extrusion-color": isDark ? "#343a40" : "#cbd5e1",
-    // ❌ CRASH ENGINE LINE
     "fill-extrusion-height": ["coalesce", ["get", "render_height"], 15] as any,
     "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0] as any,
     "fill-extrusion-opacity": options.opacity ?? 0.85,

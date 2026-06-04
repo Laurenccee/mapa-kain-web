@@ -1,4 +1,4 @@
-import StoreRegisterPageClient from "@/features/store/components/StoreRegisterPageClient";
+import StoreRegisterPageClient from "@/features/store/components/store/StoreRegisterPageClient";
 import { getClaimedBuildingIds } from "@/features/store/utils/claimedBuildings";
 
 export default async function StoreRegisterPage() {

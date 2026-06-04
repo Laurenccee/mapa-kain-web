@@ -13,3 +13,14 @@ export type AuthContextType = AuthState & {
   hasProfile: boolean;
   hasStore: boolean;
 };
+
+export interface AuthFormProps {
+  mode: "sign-in" | "sign-up";
+  schema: any;
+  action: (
+    data: any,
+  ) => Promise<{ success: boolean; message?: string } | undefined | void>;
+  onSuccessRoute: string;
+  successMessage: string;
+  errorMessage: string;
+}

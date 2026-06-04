@@ -1,6 +1,6 @@
 import Header from "@/components/layouts/Header";
 import SignOutButton from "@/components/shared/SignOutButton";
-import ProfileSetupForm from "@/features/profile/components/ProfileSetupForm";
+import ProfileForm from "@/features/profile/components/ProfileForm";
 
 export default function SetupProfilePage() {
   return (
@@ -16,7 +16,16 @@ export default function SetupProfilePage() {
           </p>
         </div>
         <div className="flex flex-col gap-4">
-          <ProfileSetupForm />
+          <ProfileForm
+            mode="create"
+            profileId={""}
+            defaultValues={{
+              full_name: "",
+              username: "",
+              phone_number: "",
+              avatar_url: "",
+            }}
+          />
         </div>
       </div>
     </section>

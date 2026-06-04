@@ -3,17 +3,8 @@ import { point } from "@turf/helpers";
 import type { Polygon, MultiPolygon, Feature, Position } from "geojson";
 import type maplibregl from "maplibre-gl";
 import { shoelaceArea } from "./shoelaceArea";
+import { BuildingSelectionResult } from "../types";
 
-export interface BuildingSelectionResult {
-  buildingId: string;
-  properties: Record<string, unknown>;
-  feature: Feature<Polygon>;
-}
-
-/**
- * Finds the smallest building polygon under the click point.
- * Returns the selection result, or null if nothing was hit.
- */
 export function queryBuildingAtPoint(
   map: maplibregl.Map,
   pointCoords: { x: number; y: number },
@@ -75,7 +66,6 @@ export function queryBuildingAtPoint(
     return null;
   }
 
-  // Deduplicate tile-seam floating-point duplicates (~1cm precision)
   const seen = new Set<string>();
   const cleanRing = bestRing.filter((coord) => {
     const key = `${coord[0].toFixed(7)},${coord[1].toFixed(7)}`;
@@ -88,7 +78,6 @@ export function queryBuildingAtPoint(
     return null;
   }
 
-  // Ensure ring is closed
   const first = cleanRing[0];
   const last = cleanRing[cleanRing.length - 1];
   const closedRing =
@@ -102,7 +91,6 @@ export function queryBuildingAtPoint(
     properties: bestProperties,
   };
 
-  // Compute centroid-based building ID
   const points = closedRing.slice(0, -1);
   const len = points.length;
   let buildingId: string;
@@ -120,39 +108,4 @@ export function queryBuildingAtPoint(
   }
 
   return { buildingId, properties: bestProperties, feature: selectedFeature };
-}
-
-/**
- * Legacy imperative click handler: Finds building, draws to map source.
- */
-export function handleBuildingClick(
-  map: maplibregl.Map,
-  e: maplibregl.MapMouseEvent,
-): BuildingSelectionResult | null {
-  const result = queryBuildingAtPoint(map, e.point, e.lngLat);
-  const selectionSource = map.getSource("selected-building") as
-    | maplibregl.GeoJSONSource
-    | undefined;
-
-  if (!result) {
-    selectionSource?.setData({ type: "FeatureCollection", features: [] });
-    return null;
-  }
-
-  selectionSource?.setData({
-    type: "FeatureCollection",
-    features: [result.feature],
-  });
-
-  return result;
-}
-
-/**
- * Legacy imperative selection clearer.
- */
-export function clearBuildingSelection(map: maplibregl.Map) {
-  const source = map.getSource("selected-building") as
-    | maplibregl.GeoJSONSource
-    | undefined;
-  source?.setData({ type: "FeatureCollection", features: [] });
 }

@@ -21,19 +21,19 @@ const publicNavs = [
 
 export default function BottomTabBar() {
   const pathname = usePathname();
-  const { hasStore, isAuthenticated, userId } = useAuth();
+  const { hasStore, isAuthenticated, user_id } = useAuth();
 
   const visibleNavItems = useMemo(() => {
     const items = [...publicNavs];
     if (isAuthenticated) {
       items.push({
         name: "Profile",
-        href: ROUTES.PROFILE(userId || ""),
+        href: ROUTES.PROFILE(user_id || ""),
         icon: UserIcon,
       });
     }
     return items;
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, user_id]);
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 items-center px-4 sm:max-w-md">

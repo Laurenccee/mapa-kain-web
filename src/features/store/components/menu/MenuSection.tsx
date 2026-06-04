@@ -1,7 +1,7 @@
 import CreateMenuDialog from "./CreateMenuDialog";
 import MenuCard from "./MenuCard";
-import { getMenuItemsAction } from "../actions/menu";
-import { MenuSectionProps } from "../types/menu";
+import { getMenuItemsAction } from "../../actions/menu";
+import { MenuSectionProps } from "../../types/menu";
 import UpdateMenuDialog from "./UpdateMenuDialog";
 
 export default async function MenuSection({ storeId }: MenuSectionProps) {

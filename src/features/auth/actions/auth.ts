@@ -108,7 +108,7 @@ export async function forgetPasswordAction(values: ForgetPasswordData) {
   return { success: true };
 }
 
-export async function resendVerificationEmailAction(email: string) {
+async function resendVerificationEmailAction(email: string) {
   const supabase = await createClient();
   // Supabase v2+ uses 'resend' for confirmation emails
   const { error } = await supabase.auth.resend({

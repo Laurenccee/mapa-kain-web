@@ -1,7 +1,7 @@
-import StoreProfile from "@/features/store/components/StoreProfile";
-import StoreDetailsCard from "@/features/store/components/StoreDetailsCard";
+import StoreProfile from "@/features/store/components/store/StoreProfile";
+import StoreDetailsCard from "@/features/store/components/store/StoreDetailsCard";
 import TopSukiSection from "@/features/store/components/TopSukiSection";
-import MenuSection from "@/features/store/components/MenuSection";
+import MenuSection from "@/features/store/components/menu/MenuSection";
 
 interface StorePageProps {
   params: { id: string } | Promise<{ id: string }>;

@@ -16,16 +16,7 @@ import {
   claimedLayerConfig,
   highlightedLayerConfig,
 } from "../utils/layerConfigs";
-import type { BuildingSelectionResult } from "../utils/buildingSelection";
-
-type MapMode = "view" | "select";
-
-interface MapDisplayProps {
-  mode?: MapMode;
-  onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
-  claimedBuildingIds?: string[];
-  selectClaimedOnly?: boolean;
-}
+import { MapDisplayProps } from "../types";
 
 export default function MapDisplay({
   mode = "view",
@@ -47,11 +38,9 @@ export default function MapDisplay({
   const {
     isLayersReady,
     setIsLayersReady,
-    selectedBuilding,
     handleMapIdle,
     handleMoveEnd,
     handleMapClick,
-    clearSelection,
     claimedGeoJson,
     selectedGeoJson,
   } = useMapLayers(mapRef, {

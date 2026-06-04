@@ -1,23 +1,9 @@
 import { useState, useMemo, useCallback, useEffect, RefObject } from "react";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import type { FeatureCollection, Polygon, Feature } from "geojson";
-import {
-  queryBuildingAtPoint,
-  type BuildingSelectionResult,
-} from "../utils/buildingSelection";
+import { queryBuildingAtPoint } from "../utils/buildingSelection";
 import { queryClaimedBuildings } from "../utils/claimedBuildings";
-
-interface SelectedBuilding {
-  id: string | number;
-  properties: Record<string, any>;
-}
-
-interface UseMapLayersOptions {
-  onBuildingSelect?: (result: BuildingSelectionResult | null) => void;
-  canSelect?: boolean;
-  claimedBuildingIds?: string[];
-  selectClaimedOnly?: boolean;
-}
+import { SelectedBuilding, UseMapLayersOptions } from "../types";
 
 export function useMapLayers(
   mapRef: RefObject<MapRef | null>,

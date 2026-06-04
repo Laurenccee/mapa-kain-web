@@ -4,9 +4,6 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 
 export default function StoreProfile() {
   const { store, profile } = useAuth();
-
-  console.log("store", store);
-  console.log("profile", profile);
   return (
     <div className="grid grid-cols-1 gap-4">
       <div className="col-span-1 flex flex-col gap-2">

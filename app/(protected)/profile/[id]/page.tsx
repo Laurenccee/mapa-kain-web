@@ -1,4 +1,3 @@
-import SignOutButton from "@/components/shared/SignOutButton";
 import { Button } from "@/components/ui/button";
 import {
   Card,

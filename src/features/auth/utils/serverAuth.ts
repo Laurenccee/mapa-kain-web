@@ -1,6 +1,5 @@
-// features/auth/utils/server-auth.ts
-import { createClient } from '@/lib/supabase/server';
-import { User } from '@supabase/supabase-js';
+import { createClient } from "@/lib/supabase/server";
+import { User } from "@supabase/supabase-js";
 
 /**
  * Reusable helper to get the authenticated user on the server side.
@@ -14,7 +13,7 @@ export async function getServerUser(): Promise<User | null> {
     } = await supabase.auth.getUser();
     return user;
   } catch (error) {
-    console.error('Error fetching user on server:', error);
+    console.error("Error fetching user on server:", error);
     return null;
   }
 }
@@ -23,10 +22,10 @@ export async function getServerUser(): Promise<User | null> {
  * Enforces authentication on Server Pages/Layouts.
  * Throws a hard error which cleanly redirects to the nearest Next.js error boundary.
  */
-export async function requireServerUser(): Promise<User> {
+async function requireServerUser(): Promise<User> {
   const user = await getServerUser();
   if (!user) {
-    throw new Error('Unauthorized access');
+    throw new Error("Unauthorized access");
   }
   return user;
 }
@@ -46,7 +45,7 @@ export async function guardServerAction(): Promise<
       user: null,
       error: {
         success: false,
-        error: 'Your session has expired. Please log in again.',
+        error: "Your session has expired. Please log in again.",
       },
     };
   }

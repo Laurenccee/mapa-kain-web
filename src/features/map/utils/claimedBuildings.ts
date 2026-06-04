@@ -104,18 +104,3 @@ export function queryClaimedBuildings(
 
   return matches;
 }
-
-export function updateClaimedBuildings(
-  map: maplibregl.Map,
-  claimedIds: string[],
-) {
-  const source = map.getSource("claimed-buildings-source") as
-    | maplibregl.GeoJSONSource
-    | undefined;
-  if (!source) return;
-
-  source.setData({
-    type: "FeatureCollection",
-    features: queryClaimedBuildings(map, claimedIds),
-  });
-}

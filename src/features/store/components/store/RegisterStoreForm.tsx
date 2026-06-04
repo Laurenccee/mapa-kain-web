@@ -13,12 +13,12 @@ import { useEffect, useTransition } from "react";
 import {
   RegisterStoreData,
   RegisterStoreSchema,
-} from "../schemas/storeSchemas";
+} from "../../schemas/storeSchemas";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
-import { registerStoreAction } from "../actions/store";
+import { registerStoreAction } from "../../actions/store";
 import { ROUTES } from "@/utils/constants/routes";
 import { useRouter } from "next/navigation";
 import { AppImagePicker } from "@/components/shared/AppImagePicker";

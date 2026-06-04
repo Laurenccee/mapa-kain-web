@@ -1,82 +1,94 @@
 "use client";
 
-import InputField from "@/components/shared/InputField";
-import { Button } from "@/components/ui/button";
-
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
+import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowRight02Icon,
   AtIcon,
   Loading02Icon,
-  LockPasswordIcon,
-  Phone,
   User03Icon,
+  Phone,
 } from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
+
+import InputField from "@/components/shared/InputField";
+import { Button } from "@/components/ui/button";
+import { AppImagePicker } from "@/components/shared/AppImagePicker";
+
 import {
   ProfileSetupData,
   ProfileSetupSchema,
 } from "../schemas/profileSchemas";
-import { createProfile, deleteAvatar, uploadAvatar } from "../actions/profile";
-import { AppImagePicker } from "@/components/shared/AppImagePicker";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/hooks/use-auth";
+import { createProfile, editProfile, deleteAvatar } from "../actions/profile";
+import { uploadAvatar } from "@/actions/imageUpload";
+import { ProfileFormProps } from "../types";
+import { ROUTES } from "@/utils/constants/routes";
 
-export default function ProfileSetupForm() {
-  const [isPending, startTransistion] = useTransition();
-  const { profile } = useAuth();
+export default function ProfileForm({
+  mode,
+  profileId,
+  defaultValues,
+}: ProfileFormProps) {
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const { control, handleSubmit } = useForm<ProfileSetupData>({
     resolver: zodResolver(ProfileSetupSchema),
-    defaultValues: {
-      full_name: "",
-      username: "",
-      phone_number: "",
-      avatar_url: "",
-    },
+    defaultValues,
   });
 
-  const handleCreateProfile: SubmitHandler<ProfileSetupData> = async (data) => {
-    startTransistion(async () => {
+  const handleProfileSubmit: SubmitHandler<ProfileSetupData> = async (data) => {
+    startTransition(async () => {
       let uploadedPath: string | null = null;
       try {
         if (data.avatar_url instanceof File) {
-          uploadedPath = `${profile.id}/avatar-${Date.now()}.${data.avatar_url.name.split(".").pop()}`;
-          const publicUrl = await uploadAvatar(data.avatar_url, profile.id);
+          uploadedPath = `${profileId}/avatar-${Date.now()}.${data.avatar_url.name.split(".").pop()}`;
+          const avatarArg =
+            mode === "update" ? defaultValues.avatar_url : profileId;
+          const publicUrl = await uploadAvatar(data.avatar_url, avatarArg);
           data.avatar_url = publicUrl;
         }
+        const result =
+          mode === "update"
+            ? await editProfile(data)
+            : await createProfile(data);
 
-        const result = await createProfile(data);
-
-        if (result?.success === false) {
-          toast.error(
-            result.message || "An error occurred during profile creation.",
-          );
-          return;
+        if (!result?.success) {
+          throw new Error(result?.message || `Failed to ${mode} profile.`);
         }
-        toast.success("Profile created successfully!");
-        router.replace("/");
-      } catch (error) {
+
+        toast.success(
+          `Profile ${mode === "update" ? "updated" : "created"} successfully!`,
+        );
+
+        if (mode === "update") {
+          router.replace(ROUTES.PROFILE(profileId));
+        } else {
+          router.replace(ROUTES.ROOT);
+        }
+      } catch (error: any) {
         if (uploadedPath) {
           await deleteAvatar(uploadedPath);
         }
-        toast.error("An error occurred during profile creation.");
+        toast.error(
+          error.message || `An error occurred during profile ${mode}.`,
+        );
       }
     });
   };
 
   return (
     <form
-      id="create-profile-form"
+      id="profile-form"
       className="flex flex-col gap-8"
-      onSubmit={handleSubmit(handleCreateProfile)}
+      onSubmit={handleSubmit(handleProfileSubmit)}
     >
       <AppImagePicker name="avatar_url" control={control} variant="avatar" />
-      <div className="flex flex-col gap-2">
+
+      <div className="flex flex-col gap-4">
         <InputField
           label="Fullname"
           name="full_name"
@@ -121,14 +133,17 @@ export default function ProfileSetupForm() {
           }
         />
       </div>
+
       <Button
-        form="create-profile-form"
+        form="profile-form"
         type="submit"
         size="lg"
         className="w-full"
         disabled={isPending}
       >
-        {isPending ? "Creating profile..." : "Create Profile"}
+        {isPending
+          ? `${mode === "update" ? "Updating" : "Creating"} profile...`
+          : `${mode === "update" ? "Update" : "Create"} Profile`}
         {isPending ? (
           <HugeiconsIcon icon={Loading02Icon} className="animate-spin" />
         ) : (

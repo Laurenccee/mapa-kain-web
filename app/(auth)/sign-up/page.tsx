@@ -1,6 +1,9 @@
 import LabeledSeparator from "@/components/shared/LabeledSeparator";
+import { signUpAction } from "@/features/auth/actions/auth";
+import AuthForm from "@/features/auth/components/AuthForm";
 import OAuthButtons from "@/features/auth/components/OAuthButtons";
-import SignUpForm from "@/features/auth/components/SignUpForm";
+import { SignUpSchema } from "@/features/auth/schemas/authSchema";
+import { ROUTES } from "@/utils/constants/routes";
 import Link from "next/link";
 
 export default function SignUpPage() {
@@ -16,7 +19,14 @@ export default function SignUpPage() {
           </p>
         </div>
         <div className="flex flex-col gap-4">
-          <SignUpForm />
+          <AuthForm
+            mode="sign-up"
+            schema={SignUpSchema}
+            action={signUpAction}
+            onSuccessRoute={ROUTES.SIGN_IN}
+            successMessage="Account created successfully!"
+            errorMessage="An error occurred during sign up."
+          />
           <LabeledSeparator label="Sign up with" />
           <OAuthButtons />
           <Link href="/sign-in" className="flex justify-center">

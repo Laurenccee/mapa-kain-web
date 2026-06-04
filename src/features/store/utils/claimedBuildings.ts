@@ -3,7 +3,7 @@ import "server-only";
 import { unstable_noStore } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
-import type { ClaimedStore } from "../types/claimedStore";
+import type { ClaimedStore } from "../types/store";
 
 interface StoreClaimedBuildingRow {
   id: string;
