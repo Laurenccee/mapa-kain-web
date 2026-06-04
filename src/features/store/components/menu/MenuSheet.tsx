@@ -1,33 +1,42 @@
 "use client";
 
-import { use, useMemo } from "react";
-import CreateMenuDialog from "./CreateMenuDialog";
 import MenuCard from "./MenuCard";
 import { getMenuItemsAction } from "../../actions/menu";
+import { useEffect, useState } from "react";
+import { MenuItemRecord } from "../../types/menu";
+import { MenuSkeleton } from "../skeleton/MenuSkeleton";
 
 interface MenuSectionProps {
   storeId: string;
 }
 
 export default function MenuSection({ storeId }: MenuSectionProps) {
-  // ⚡ Industry Practice: Pass the Server Action promise straight to React's use() hook
-  // We use useMemo to prevent refetching the exact same promise on simple component rerenders
-  const resultPromise = useMemo(() => getMenuItemsAction(storeId), [storeId]);
-  const result = use(resultPromise);
+  const [menuItems, setMenuItems] = useState<MenuItemRecord[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const menuItems = result?.data ?? [];
-  const errorMessage = result?.success
-    ? ""
-    : result?.message || "Unable to load menu items.";
+  useEffect(() => {
+    setIsLoading(true);
+    setMenuItems([]);
+    setErrorMessage("");
+    getMenuItemsAction(storeId).then((result) => {
+      if (result.success) {
+        setMenuItems(result.data);
+      } else {
+        setErrorMessage(result.message || "Unable to load menu items.");
+      }
+      setIsLoading(false);
+    });
+  }, [storeId]);
+
+  if (isLoading) {
+    return <MenuSkeleton shouldShowEditButton={false} type="sheet" />;
+  }
 
   return (
     <div className="w-full">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-foreground text-lg font-semibold">Daily Menu</h1>
-          <CreateMenuDialog />
-        </div>
-
+        <h1 className="text-foreground text-lg font-semibold">Daily Menu</h1>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {menuItems.map((menuItem) => (
             <MenuCard

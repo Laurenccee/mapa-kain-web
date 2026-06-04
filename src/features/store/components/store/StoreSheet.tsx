@@ -4,7 +4,6 @@ import React, { Suspense } from "react";
 import NextImage from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ClaimedStore } from "../../types/store";
-import MenuSection from "../menu/MenuSheet"; // Now a client-safe data component
 import {
   Sheet,
   SheetContent,
@@ -12,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import MenuSheet from "../menu/MenuSheet";
 import { MenuSkeleton } from "../skeleton/MenuSkeleton";
 
 interface StoreSheetProps {
@@ -51,13 +51,7 @@ export default function StoreSheet({ store, onClose }: StoreSheetProps) {
             {store?.description?.trim() || "No description provided yet."}
           </SheetDescription>
         </SheetHeader>
-        <div className="px-4">
-          {store && (
-            <Suspense key={store.id} fallback={<MenuSkeleton />}>
-              <MenuSection storeId={store.id} />
-            </Suspense>
-          )}
-        </div>
+        <div className="px-4">{store && <MenuSheet storeId={store.id} />}</div>
       </SheetContent>
     </Sheet>
   );

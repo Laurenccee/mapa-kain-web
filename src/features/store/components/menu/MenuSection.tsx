@@ -1,11 +1,11 @@
 import CreateMenuDialog from "./CreateMenuDialog";
 import MenuCard from "./MenuCard";
-import { getMenuItemsAction } from "../../actions/menu";
 import { MenuSectionProps } from "../../types/menu";
 import UpdateMenuDialog from "./UpdateMenuDialog";
+import { use } from "react";
 
-export default async function MenuSection({ storeId }: MenuSectionProps) {
-  const result = await getMenuItemsAction(storeId);
+export default function MenuSection({ menuItemsPromise }: MenuSectionProps) {
+  const result = use(menuItemsPromise);
   const menuItems = result.data;
 
   return (

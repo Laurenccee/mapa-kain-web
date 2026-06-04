@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePathname } from "next/navigation";
-import { MenuCardProps, MenuItemRecord } from "../../types/menu";
+import { MenuCardProps } from "../../types/menu";
 
 export default function MenuCard({
   image_url,

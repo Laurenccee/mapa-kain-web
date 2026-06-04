@@ -30,7 +30,11 @@ export interface UpdateMenuDialogProps {
 }
 
 export interface MenuSectionProps {
-  storeId: string;
+  menuItemsPromise: Promise<{
+    success: boolean;
+    data: any[];
+    message?: string;
+  }>;
 }
 
 export interface MenuBaseFormProps {

@@ -2,6 +2,9 @@ import StoreProfile from "@/features/store/components/store/StoreProfile";
 import StoreDetailsCard from "@/features/store/components/store/StoreDetailsCard";
 import TopSukiSection from "@/features/store/components/TopSukiSection";
 import MenuSection from "@/features/store/components/menu/MenuSection";
+import { Suspense } from "react";
+import { MenuSkeleton } from "@/features/store/components/skeleton/MenuSkeleton";
+import { getMenuItemsAction } from "@/features/store/actions/menu";
 
 interface StorePageProps {
   params: { id: string } | Promise<{ id: string }>;
@@ -9,6 +12,7 @@ interface StorePageProps {
 
 export default async function StorePage({ params }: StorePageProps) {
   const { id } = await Promise.resolve(params);
+  const menuItemsPromise = getMenuItemsAction(id);
 
   return (
     <section className="flex flex-col px-4 py-6 sm:py-8">
@@ -17,7 +21,12 @@ export default async function StorePage({ params }: StorePageProps) {
         <StoreDetailsCard />
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-7">
-          <MenuSection storeId={id} />
+          <Suspense
+            key={id}
+            fallback={<MenuSkeleton shouldShowEditButton={true} />}
+          >
+            <MenuSection menuItemsPromise={menuItemsPromise} />
+          </Suspense>
           <TopSukiSection />
         </div>
       </div>

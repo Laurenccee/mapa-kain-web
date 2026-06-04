@@ -1,31 +1,75 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-export function MenuSkeleton() {
+interface MenuSkeletonProps {
+  /** The number of skeleton items to render. Defaults to 4. */
+  count?: number;
+  /** Whether to show the top header row ("Daily Menu" and actions). Defaults to true. */
+  showHeader?: boolean;
+  /** Whether to reserve space for the bottom action button in the card[cite: 2, 3]. Defaults to false. */
+  shouldShowEditButton?: boolean;
+  type?: "sheet" | "section";
+}
+
+export function MenuSkeleton({
+  count = 4,
+  showHeader = true,
+  shouldShowEditButton = false,
+  type,
+}: MenuSkeletonProps) {
   return (
-    <div className="w-full space-y-4 pt-2">
-      {/* Header Row Skeleton */}
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-28" />
-        <Skeleton className="h-9 w-32" />
-      </div>
+    <div className="col-span-1 w-full grid-cols-4 space-y-4 sm:col-span-5">
+      {/* 1. Conditional Header Section: Present in MenuSection, hidden in MenuSheet */}
+      {showHeader && (
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-28" />{" "}
+          {/* "Daily Menu" heading placeholder[cite: 4] */}
+          {shouldShowEditButton && (
+            <Skeleton className="h-9 w-32 rounded-md" />
+          )}{" "}
+          {/* CreateMenuDialog placeholder[cite: 4] */}
+        </div>
+      )}
 
-      {/* Grid Menu Cards Skeleton */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 rounded-xl border p-4 shadow-sm"
-          >
-            {/* Image Thumbnail placeholder */}
-            <Skeleton className="h-16 w-16 shrink-0 rounded-lg" />
+      {/* 2. Grid Container: Uses responsive layout matching MenuSection[cite: 4] */}
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-4",
+          type === "sheet" ? "sm:grid-cols-2" : "md:grid-cols-3",
+        )}
+      >
+        {Array.from({ length: count }).map((_, i) => (
+          <Card key={i} className="relative col-span-1 overflow-hidden pt-0">
+            {/* Badge Placeholder */}
+            <Skeleton className="absolute top-4 right-4 z-10 h-5 w-20 rounded-full" />
 
-            {/* Text details placeholders */}
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-              <Skeleton className="mt-1 h-4 w-1/4" />
+            {/* Aspect Video Image Placeholder */}
+            <div className="relative aspect-video w-full">
+              <Skeleton className="h-full w-full rounded-none" />
             </div>
-          </div>
+
+            {/* Content Placeholders */}
+            <CardContent className="mt-4 flex flex-col gap-2">
+              {/* Title & Price Row */}
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-1/3" /> {/* Name */}
+                <Skeleton className="h-5 w-16" /> {/* Price */}
+              </div>
+
+              {/* Description Lines */}
+              <div className="mt-1 space-y-1.5">
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </CardContent>
+
+            {/* Optional Edit Actions Footer[cite: 2, 3] */}
+            {shouldShowEditButton && (
+              <CardFooter>
+                <Skeleton className="h-9 w-full" />
+              </CardFooter>
+            )}
+          </Card>
         ))}
       </div>
     </div>
