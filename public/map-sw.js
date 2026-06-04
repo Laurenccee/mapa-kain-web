@@ -1,4 +1,3 @@
-// public/map-sw.js
 const TILE_CACHE_NAME = "maplibre-tiles-v1";
 const ASSET_CACHE_NAME = "maplibre-assets-v1";
 
