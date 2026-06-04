@@ -21,7 +21,6 @@ export default function SignInPage() {
         <div className="flex flex-col gap-4">
           <AuthForm
             mode="sign-in"
-            schema={SignInSchema}
             action={signInAction}
             onSuccessRoute={ROUTES.MAP}
             successMessage="Signed in successfully!"

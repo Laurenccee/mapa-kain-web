@@ -21,7 +21,6 @@ export default function SignUpPage() {
         <div className="flex flex-col gap-4">
           <AuthForm
             mode="sign-up"
-            schema={SignUpSchema}
             action={signUpAction}
             onSuccessRoute={ROUTES.SIGN_IN}
             successMessage="Account created successfully!"

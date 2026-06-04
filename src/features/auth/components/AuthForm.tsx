@@ -18,12 +18,16 @@ import { Button } from "@/components/ui/button";
 import PasswordRulesCard from "../../../components/shared/PasswordRuleCard";
 import FormActions from "./FormActions";
 
-import { SignInData, SignUpData } from "../schemas/authSchema";
+import {
+  SignInSchema,
+  SignUpSchema,
+  SignInData,
+  SignUpData,
+} from "../schemas/authSchema";
 import { AuthFormProps } from "../types";
 
 export default function AuthForm({
   mode,
-  schema,
   action,
   onSuccessRoute,
   successMessage,
@@ -33,9 +37,10 @@ export default function AuthForm({
   const router = useRouter();
 
   const isSignIn = mode === "sign-in";
+  const activeSchema = isSignIn ? SignInSchema : SignUpSchema;
 
   const { control, handleSubmit, setValue } = useForm<SignInData | SignUpData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(activeSchema),
     defaultValues: {
       email: "",
       password: "",
