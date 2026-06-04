@@ -17,11 +17,11 @@ import {
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { BuildingSelectionResult } from "@/features/map/utils/buildingSelection";
 import { registerStoreAction } from "../../actions/store";
 import { ROUTES } from "@/utils/constants/routes";
 import { useRouter } from "next/navigation";
 import { AppImagePicker } from "@/components/shared/AppImagePicker";
+import { BuildingSelectionResult } from "@/features/map/types";
 
 interface RegisterStoreFormProps {
   selectedBuilding: BuildingSelectionResult | null;
