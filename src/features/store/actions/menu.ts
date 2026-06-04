@@ -118,15 +118,6 @@ export async function getMenuItemsAction(
   store_id: string,
 ): Promise<{ success: boolean; data: MenuItemRecord[]; message?: string }> {
   const supabase = await createClient();
-  const { user, error: authError } = await guardServerAction();
-
-  if (!user || authError) {
-    return {
-      success: false,
-      data: [],
-      message: "Authentication error. Please log in again.",
-    };
-  }
 
   try {
     const { data, error } = await supabase
