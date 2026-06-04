@@ -36,6 +36,9 @@ export interface MenuSectionProps {
     message?: string;
   }>;
 }
+export interface MenuSheetProps {
+  storeId: string;
+}
 
 export interface MenuBaseFormProps {
   mode: "create" | "update";

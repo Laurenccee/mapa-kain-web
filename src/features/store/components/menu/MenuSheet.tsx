@@ -1,23 +1,22 @@
 "use client";
 
 import MenuCard from "./MenuCard";
-import { getMenuItemsAction } from "../../actions/menu";
-import { useEffect, useState } from "react";
-import { MenuItemRecord } from "../../types/menu";
 import { MenuSkeleton } from "../skeleton/MenuSkeleton";
+import { useMenuStore } from "../../storage/useMenuStore";
+import { MenuSheetProps } from "../../types/menu";
 
-interface MenuSectionProps {
-  menuItems: MenuItemRecord[];
-  isLoading: boolean;
-  errorMessage?: string;
-}
+const EMPTY_ARRAY: any[] = [];
 
-export default function MenuSection({
-  menuItems,
-  isLoading,
-  errorMessage,
-}: MenuSectionProps) {
-  if (isLoading) {
+export default function MenuSheet({ storeId }: MenuSheetProps) {
+  const menuItems = useMenuStore(
+    (state) => state.cache[storeId] || EMPTY_ARRAY,
+  );
+  const isLoading = useMenuStore(
+    (state) => state.loadingStates[storeId] ?? true,
+  );
+  const errorMessage = useMenuStore((state) => state.errorMessages[storeId]);
+
+  if (isLoading && menuItems.length === 0) {
     return <MenuSkeleton shouldShowEditButton={false} type="sheet" />;
   }
 
