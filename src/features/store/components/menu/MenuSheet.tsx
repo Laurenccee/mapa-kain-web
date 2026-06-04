@@ -7,28 +7,16 @@ import { MenuItemRecord } from "../../types/menu";
 import { MenuSkeleton } from "../skeleton/MenuSkeleton";
 
 interface MenuSectionProps {
-  storeId: string;
+  menuItems: MenuItemRecord[];
+  isLoading: boolean;
+  errorMessage?: string;
 }
 
-export default function MenuSection({ storeId }: MenuSectionProps) {
-  const [menuItems, setMenuItems] = useState<MenuItemRecord[]>([]);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-    setMenuItems([]);
-    setErrorMessage("");
-    getMenuItemsAction(storeId).then((result) => {
-      if (result.success) {
-        setMenuItems(result.data);
-      } else {
-        setErrorMessage(result.message || "Unable to load menu items.");
-      }
-      setIsLoading(false);
-    });
-  }, [storeId]);
-
+export default function MenuSection({
+  menuItems,
+  isLoading,
+  errorMessage,
+}: MenuSectionProps) {
   if (isLoading) {
     return <MenuSkeleton shouldShowEditButton={false} type="sheet" />;
   }

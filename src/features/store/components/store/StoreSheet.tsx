@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import NextImage from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ClaimedStore } from "../../types/store";
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sheet";
 import MenuSheet from "../menu/MenuSheet";
 import { MenuSkeleton } from "../skeleton/MenuSkeleton";
+import { MenuItemRecord } from "../../types/menu";
+import { getMenuItemsAction } from "../../actions/menu";
 
 interface StoreSheetProps {
   store: ClaimedStore | null;
@@ -21,6 +23,38 @@ interface StoreSheetProps {
 
 export default function StoreSheet({ store, onClose }: StoreSheetProps) {
   const isMobile = useIsMobile();
+
+  const [menuCache, setMenuCache] = useState<Record<string, MenuItemRecord[]>>(
+    {},
+  );
+  const [loadingStores, setLoadingStores] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [errorMessages, setErrorMessages] = useState<Record<string, string>>(
+    {},
+  );
+
+  const currentStoreId = store?.id;
+
+  useEffect(() => {
+    if (!currentStoreId) return;
+
+    if (menuCache[currentStoreId]) return;
+
+    setLoadingStores((prev) => ({ ...prev, [currentStoreId]: true }));
+
+    getMenuItemsAction(currentStoreId).then((result) => {
+      if (result.success) {
+        setMenuCache((prev) => ({ ...prev, [currentStoreId]: result.data }));
+      } else {
+        setErrorMessages((prev) => ({
+          ...prev,
+          [currentStoreId]: result.message || "Unable to load menu items.",
+        }));
+      }
+      setLoadingStores((prev) => ({ ...prev, [currentStoreId]: false }));
+    });
+  }, [currentStoreId, menuCache]);
 
   return (
     <Sheet open={Boolean(store)} onOpenChange={(open) => !open && onClose()}>
@@ -51,7 +85,15 @@ export default function StoreSheet({ store, onClose }: StoreSheetProps) {
             {store?.description?.trim() || "No description provided yet."}
           </SheetDescription>
         </SheetHeader>
-        <div className="px-4">{store && <MenuSheet storeId={store.id} />}</div>
+        <div className="px-4">
+          {store && (
+            <MenuSheet
+              menuItems={menuCache[store.id] || []}
+              isLoading={loadingStores[store.id] ?? !menuCache[store.id]}
+              errorMessage={errorMessages[store.id]}
+            />
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );
