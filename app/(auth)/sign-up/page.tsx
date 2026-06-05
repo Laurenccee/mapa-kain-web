@@ -2,7 +2,6 @@ import LabeledSeparator from "@/components/shared/LabeledSeparator";
 import { signUpAction } from "@/features/auth/actions/auth";
 import AuthForm from "@/features/auth/components/AuthForm";
 import OAuthButtons from "@/features/auth/components/OAuthButtons";
-import { SignUpSchema } from "@/features/auth/schemas/authSchema";
 import { ROUTES } from "@/utils/constants/routes";
 import Link from "next/link";
 

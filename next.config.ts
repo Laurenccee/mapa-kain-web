@@ -1,23 +1,8 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: "/map-sw.js",
-        headers: [
-          {
-            key: "Service-Worker-Allowed",
-            value: "/",
-          },
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        ],
-      },
-    ];
-  },
+  reactStrictMode: true,
   images: {
     remotePatterns: [
       {
@@ -30,9 +15,22 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "5mb", // Set to 4MB instead of default 1MB
+      bodySizeLimit: "5mb",
     },
   },
 };
 
-export default nextConfig;
+const pwaWrappedConfig = withPWA({
+  dest: "public",
+  register: true,
+  disable: process.env.NODE_ENV === "development",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  workboxOptions: {
+    disableDevLogs: true,
+    skipWaiting: true,
+  },
+})(nextConfig);
+
+export default pwaWrappedConfig as NextConfig;

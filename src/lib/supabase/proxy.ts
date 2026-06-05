@@ -3,12 +3,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  if (
+    path === "/sw.js" ||
+    path.startsWith("/workbox-") ||
+    path.startsWith("/swe-worker-") ||
+    path.startsWith("/_next") ||
+    path.endsWith(".json") ||
+    path.includes("style")
+  ) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -45,8 +56,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
-
   if (path === ROUTES.RESET_PASSWORD) {
     const token = request.nextUrl.searchParams.get("code");
     if (!token) {
@@ -69,11 +78,7 @@ export async function updateSession(request: NextRequest) {
     if (
       path === ROUTES.MAP_SOURCE ||
       path.startsWith(ROUTES.API) ||
-      path.startsWith("/scanner-barebone") ||
-      path.startsWith("/_next") ||
-      path.startsWith("/static") ||
-      path.includes("style") ||
-      path.endsWith(".json")
+      path.startsWith("/static")
     ) {
       return NextResponse.next();
     }

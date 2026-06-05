@@ -7,7 +7,7 @@ import { MenuSkeleton } from "@/features/store/components/skeleton/MenuSkeleton"
 import { getMenuItemsAction } from "@/features/store/actions/menu";
 
 interface StorePageProps {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export default async function StorePage({ params }: StorePageProps) {
