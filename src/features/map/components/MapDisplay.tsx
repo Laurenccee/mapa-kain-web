@@ -1,18 +1,19 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Layer, Map, Source } from "@vis.gl/react-maplibre";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import { useTheme } from "next-themes";
+import type { GeolocateControl } from "maplibre-gl";
 
 import { MAPS } from "@/utils/constants/maps";
 import { useMapLayers } from "../hooks/useMapLayers";
 import { MapLoader } from "../components/MapLoader";
+import { MapControls } from "./MapControls";
 
 import { setupGeolocation } from "../utils/geolocation";
 import {
-  getBuildingsLayerConfig,
   claimedLayerConfig,
   highlightedLayerConfig,
 } from "../utils/layerConfigs";
@@ -31,6 +32,10 @@ export default function MapDisplay({
   const [mounted, setMounted] = useState(false);
   const [initialViewState, setInitialViewState] = useState<any | null>(null);
   const [hasCachedLocation, setHasCachedLocation] = useState(false);
+  const [isTilted, setIsTilted] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const geoControlRef = useRef<GeolocateControl | null>(null);
 
   const isDark = mounted ? resolvedTheme === "dark" : false;
   const mapStyle = isDark ? MAPS.STYLES.dark : MAPS.STYLES.light;
@@ -50,14 +55,6 @@ export default function MapDisplay({
     selectClaimedOnly,
   });
 
-  const buildingsLayer = useMemo(
-    () =>
-      getBuildingsLayerConfig(isDark, {
-        opacity: canSelect ? 0.85 : 0.5,
-      }),
-    [isDark, canSelect],
-  );
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -73,7 +70,7 @@ export default function MapDisplay({
             longitude: lng,
             latitude: lat,
             zoom: 17,
-            pitch: 55,
+            pitch: MAPS.PITCH.TILTED,
             bearing: -15,
           });
           return;
@@ -93,7 +90,7 @@ export default function MapDisplay({
             longitude,
             latitude,
             zoom: 16.5,
-            pitch: 55,
+            pitch: MAPS.PITCH.TILTED,
             bearing: -15,
           });
         },
@@ -102,7 +99,7 @@ export default function MapDisplay({
             longitude: MAPS.FALLBACK_PHILIPPINES.longitude,
             latitude: MAPS.FALLBACK_PHILIPPINES.latitude,
             zoom: 17,
-            pitch: 55,
+            pitch: MAPS.PITCH.TILTED,
             bearing: -15,
           });
         },
@@ -111,7 +108,29 @@ export default function MapDisplay({
   }, []);
 
   const handleMapLoad = (e: any) => {
-    setupGeolocation(e.target, hasCachedLocation, () => setIsLayersReady(true));
+    geoControlRef.current = setupGeolocation(
+      e.target,
+      hasCachedLocation,
+      () => setIsLayersReady(true),
+      (active) => {
+        setIsLocating(active);
+        setIsSearchingLocation(false);
+      },
+      () => setIsSearchingLocation(false),
+    );
+  };
+
+  const handleTiltToggle = (pressed: boolean) => {
+    setIsTilted(pressed);
+    mapRef.current?.easeTo({
+      pitch: pressed ? MAPS.PITCH.TILTED : MAPS.PITCH.FLAT,
+      duration: 500,
+    });
+  };
+
+  const handleLocateToggle = () => {
+    if (!isLocating) setIsSearchingLocation(true);
+    geoControlRef.current?.trigger();
   };
 
   const showLoader = !initialViewState || !isLayersReady;
@@ -119,6 +138,16 @@ export default function MapDisplay({
   return (
     <div className="relative h-full w-full">
       <MapLoader show={showLoader} />
+
+      {initialViewState && (
+        <MapControls
+          isTilted={isTilted}
+          onTiltToggle={handleTiltToggle}
+          isLocating={isLocating}
+          isSearchingLocation={isSearchingLocation}
+          onLocateToggle={handleLocateToggle}
+        />
+      )}
 
       {initialViewState && (
         <Map
@@ -133,8 +162,6 @@ export default function MapDisplay({
           onMoveEnd={handleMoveEnd}
           onClick={canSelect ? handleMapClick : undefined}
         >
-          <Layer {...buildingsLayer} />
-
           <Source
             id="claimed-buildings-source"
             type="geojson"

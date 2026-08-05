@@ -2,7 +2,10 @@ import { useState, useMemo, useCallback, useEffect, RefObject } from "react";
 import type { MapRef } from "@vis.gl/react-maplibre";
 import type { FeatureCollection, Polygon, Feature } from "geojson";
 import { queryBuildingAtPoint } from "../utils/buildingSelection";
-import { queryClaimedBuildings } from "../utils/claimedBuildings";
+import {
+  matchClaimedBuildingId,
+  queryClaimedBuildings,
+} from "../utils/claimedBuildings";
 import { SelectedBuilding, UseMapLayersOptions } from "../types";
 
 export function useMapLayers(
@@ -73,22 +76,29 @@ export function useMapLayers(
 
       const result = queryBuildingAtPoint(map, e.point, e.lngLat);
       if (result) {
-        if (
-          selectClaimedOnly &&
-          !effectiveClaimedIds.includes(result.buildingId)
-        ) {
+        const matchedClaimedId = matchClaimedBuildingId(
+          result.buildingId,
+          effectiveClaimedIds,
+        );
+
+        if (selectClaimedOnly && !matchedClaimedId) {
           setSelectedBuilding(null);
           setSelectedFeature(null);
           onBuildingSelect?.(null);
           return;
         }
 
+        // Normalize to the canonical claimed id so lookups by DB id succeed.
+        const normalizedResult = matchedClaimedId
+          ? { ...result, buildingId: matchedClaimedId }
+          : result;
+
         setSelectedBuilding({
-          id: result.buildingId,
-          properties: result.properties,
+          id: normalizedResult.buildingId,
+          properties: normalizedResult.properties,
         });
-        setSelectedFeature(result.feature);
-        onBuildingSelect?.(result);
+        setSelectedFeature(normalizedResult.feature);
+        onBuildingSelect?.(normalizedResult);
       } else {
         setSelectedBuilding(null);
         setSelectedFeature(null);

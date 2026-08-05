@@ -6,6 +6,8 @@ export function setupGeolocation(
   map: maplibregl.Map,
   hasFreshCache: boolean,
   onLocationReady: () => void,
+  onTrackingChange?: (active: boolean) => void,
+  onError?: () => void,
 ) {
   let locationResolved = hasFreshCache;
 
@@ -25,7 +27,20 @@ export function setupGeolocation(
     },
   });
 
+  // Control is still added so its user-location marker/accuracy circle render;
+  // the native button is hidden imperatively and triggered via a custom toggle instead.
   map.addControl(geoControl, "bottom-right");
+
+  const nativeControl = map
+    .getContainer()
+    .querySelector(".maplibregl-ctrl-bottom-right");
+  if (nativeControl instanceof HTMLElement) {
+    nativeControl.style.display = "none";
+  }
+
+  geoControl.on("trackuserlocationstart", () => onTrackingChange?.(true));
+  geoControl.on("trackuserlocationend", () => onTrackingChange?.(false));
+  geoControl.on("error", () => onError?.());
 
   if (hasFreshCache) {
     map.on("load", () => {
@@ -50,4 +65,6 @@ export function setupGeolocation(
       onLocationReady();
     }
   });
+
+  return geoControl;
 }

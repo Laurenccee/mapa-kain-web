@@ -11,7 +11,7 @@ export function queryBuildingAtPoint(
   lngLat: { lng: number; lat: number },
 ): BuildingSelectionResult | null {
   const features = map.queryRenderedFeatures([pointCoords.x, pointCoords.y], {
-    layers: ["3d-buildings"],
+    layers: ["3d-building"],
   });
 
   if (!features || features.length === 0) {
