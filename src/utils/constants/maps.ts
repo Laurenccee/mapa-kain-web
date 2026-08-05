@@ -1,4 +1,4 @@
-const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
+const MAPTILER_KEY = process.env.MAPTILER_KEY;
 
 export const MAPS = {
   STYLES: {
