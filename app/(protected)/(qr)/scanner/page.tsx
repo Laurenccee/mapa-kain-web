@@ -11,7 +11,7 @@ const QRScanner = dynamic(
 
 export default function QrScannerPage() {
   return (
-    <main className="bg-background h-screen w-screen overflow-hidden">
+    <main className="bg-background h-dvh w-screen overflow-hidden">
       <QRScanner onScanSuccess={(text) => console.log(text)} />
     </main>
   );

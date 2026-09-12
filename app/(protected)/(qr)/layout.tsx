@@ -4,7 +4,7 @@ import React from "react";
 
 export default function QRLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="bg-background relative flex h-screen w-full flex-col overflow-hidden">
+    <main className="bg-background relative flex h-dvh w-full flex-col overflow-hidden">
       {children}
     </main>
   );

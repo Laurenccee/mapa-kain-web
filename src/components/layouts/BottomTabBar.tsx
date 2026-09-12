@@ -36,7 +36,7 @@ export default function BottomTabBar() {
   }, [isAuthenticated, user_id]);
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 items-center px-4 sm:max-w-md">
+    <div className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 items-center px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0))] sm:max-w-md">
       <div className="flex w-full items-center justify-center gap-2 sm:gap-4">
         <nav
           className="border-border bg-card flex flex-3 items-center justify-between gap-1 rounded-xl border p-1.5 shadow-xl backdrop-blur-xl"

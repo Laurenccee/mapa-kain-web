@@ -8,8 +8,8 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    // h-screen prevents the whole page from scrolling
-    <div className="relative h-screen w-full flex flex-col bg-background">
+    // h-dvh prevents the whole page from scrolling and tracks mobile toolbar resizing
+    <div className="relative h-dvh w-full flex flex-col bg-background">
       <Header />
 
       {/* flex-1 makes this container grow to fill all available space */}
