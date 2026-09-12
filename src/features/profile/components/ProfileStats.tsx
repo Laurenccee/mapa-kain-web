@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { formatMonthYear } from "@/utils/formatters/date";
 import { cn } from "@/lib/utils";
@@ -17,15 +18,18 @@ export default function ProfileStats() {
     label: string;
     value: string | number;
     compactValue?: boolean;
-  }[] = [
-    { label: "Total Stamps", value: 42 },
-    {
-      label: "Member Since",
-      value: formatMonthYear(profile?.created_at, "numeric") || "N/A",
-      compactValue: true,
-    },
-    { label: "Active Rewards", value: 5 },
-  ];
+  }[] = useMemo(
+    () => [
+      { label: "Total Stamps", value: 42 },
+      {
+        label: "Member Since",
+        value: formatMonthYear(profile?.created_at, "numeric") || "N/A",
+        compactValue: true,
+      },
+      { label: "Active Rewards", value: 5 },
+    ],
+    [profile?.created_at],
+  );
 
   return (
     <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">

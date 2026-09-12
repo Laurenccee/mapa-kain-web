@@ -28,7 +28,7 @@ export default function StoreCard() {
       />
       <CardContent className="text-primary-foreground relative z-10 mt-auto flex items-end justify-between space-y-2 px-6">
         <div>
-          <h2 className="text-xl font-semibold">{store.name}</h2>
+          <h2 className="text-xl font-semibold">{store?.name ?? "Your Store"}</h2>
           <p className="text-primary-foreground/90 max-w-prose text-sm">
             More information about the store can go here.
           </p>

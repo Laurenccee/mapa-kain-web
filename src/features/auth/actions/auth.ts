@@ -104,7 +104,7 @@ export async function forgetPasswordAction(values: ForgetPasswordData) {
     return { success: false, message: error.message };
   }
 
-  revalidatePath("/", "layout");
+  // No session/profile data changes here, nothing to revalidate.
   return { success: true };
 }
 

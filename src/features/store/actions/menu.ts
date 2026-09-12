@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { PostgrestError } from "@supabase/supabase-js";
 import { MenuData, MenuSchema } from "../schemas/menuSchema";
 import { MenuItemRecord } from "../types/menu";
+import { ROUTES } from "@/utils/constants/routes";
 
 export async function deleteMenuImage(path: string, store_id: string) {
   const supabase = await createClient();
@@ -63,6 +64,7 @@ async function prepareMenuMutation(values: MenuData) {
 async function executeMenuMutation(
   values: MenuData,
   successMessage: string,
+  store_id: string,
   dbOperation: (
     supabase: any,
     payload: any,
@@ -79,8 +81,7 @@ async function executeMenuMutation(
 
     if (dbError) throw dbError;
 
-    // Adjust paths if you only want to clear specific store routes instead of layout
-    revalidatePath("/", "layout");
+    revalidatePath(ROUTES.STORE(store_id));
     return { success: true, message: successMessage };
   } catch (error: any) {
     return {
@@ -98,15 +99,21 @@ export async function createMenuAction(values: MenuData, store_id: string) {
   return executeMenuMutation(
     values,
     "Menu item successfully created!",
+    store_id,
     (supabase, payload) =>
       supabase.from("menu_items").insert({ store_id, ...payload }),
   );
 }
 
-export async function updateMenuAction(values: MenuData, menu_id: string) {
+export async function updateMenuAction(
+  values: MenuData,
+  menu_id: string,
+  store_id: string,
+) {
   return executeMenuMutation(
     values,
     "Menu item successfully updated!",
+    store_id,
     (supabase, payload) =>
       supabase.from("menu_items").update(payload).eq("id", menu_id),
   );
@@ -122,9 +129,10 @@ export async function getMenuItemsAction(
   try {
     const { data, error } = await supabase
       .from("menu_items")
-      .select("*")
+      .select("id, store_id, name, description, price, image_url, is_available")
       .eq("store_id", store_id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) throw error;
 

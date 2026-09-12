@@ -33,7 +33,7 @@ export default function StoreCard() {
           className="w-full sm:w-fit"
           asChild
         >
-          <Link href={hasStore ? `/store/${store.id}` : "/store/register"}>
+          <Link href={store ? `/store/${store.id}` : "/store/register"}>
             {hasStore ? "Go to Dashboard" : "Register Your Store"}
             <HugeiconsIcon icon={ArrowRight01Icon} />
           </Link>

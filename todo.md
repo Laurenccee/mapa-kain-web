@@ -2,62 +2,70 @@
 
 Findings from a codebase audit, grouped by impact. Check items off as they're fixed.
 
+> **Update (2026-09-12):** High and Medium priority items are done. See inline
+> notes for what changed vs. what was intentionally skipped, and "Next Up" at
+> the bottom for newly identified follow-ups from an architecture review.
+
 ## High Priority
 
-- [ ] **Reduce unnecessary `"use client"` boundaries** — move the directive down to the smallest interactive leaf so more of the tree can render on the server:
-  - [app/(public)/feed/page.tsx](app/(public)/feed/page.tsx#L1) — only uses `useAuth()`, pass auth state from a server parent instead.
-  - [app/(auth)/email-verification/page.tsx](app/(auth)/email-verification/page.tsx#L1) — just renders a child component.
-  - [app/(protected)/(qr)/scanner/page.tsx](app/(protected)/(qr)/scanner/page.tsx#L1) — only wraps `QRScanner`.
-  - [src/components/layouts/Header.tsx](src/components/layouts/Header.tsx#L1) — extract path-based routing logic to server, keep only the interactive bits client-side.
-  - [src/components/layouts/BottomTabBar.tsx](src/components/layouts/BottomTabBar.tsx#L1) — same idea, isolate the "active tab" state.
+- [x] **Reduce unnecessary `"use client"` boundaries** — re-verified against actual hook usage; only one file was genuinely unnecessary:
+  - [app/(auth)/email-verification/page.tsx](app/(auth)/email-verification/page.tsx#L1) — `"use client"` removed, now server-rendered.
+  - `feed/page.tsx`, `scanner/page.tsx`, `Header.tsx`, `BottomTabBar.tsx` — left as-is, they genuinely need client hooks (`useAuth`, `usePathname`, camera access).
 
-- [ ] **Compress/resize images before upload**:
-  - [src/components/shared/AppImagePicker.tsx](src/components/shared/AppImagePicker.tsx#L46-L80) — `getCroppedFile()` crops but never compresses; add quality/size limiting (e.g. canvas re-encode to WebP/JPEG with a max dimension).
-  - [src/actions/imageUpload.ts](src/actions/imageUpload.ts#L37-L60) — `uploadStorageFile()` has no file size/type/dimension validation before hitting storage.
-  - [src/features/profile/components/ProfileForm.tsx](src/features/profile/components/ProfileForm.tsx#L55-L65) — passes the cropped file straight to `uploadAvatar()`; validate size after cropping.
+- [x] **Compress/resize images before upload**:
+  - [src/components/shared/AppImagePicker.tsx](src/components/shared/AppImagePicker.tsx) — crop now resizes to a max dimension (512px avatar / 1600px menu) and re-encodes JPEG at quality 0.8, via [src/utils/constants/image.ts](src/utils/constants/image.ts).
+  - [src/actions/imageUpload.ts](src/actions/imageUpload.ts) — `uploadStorageFile()` now validates size + MIME type before upload.
+  - [src/features/profile/components/ProfileForm.tsx](src/features/profile/components/ProfileForm.tsx) / `MenuForm.tsx` — client-side size pre-check before calling upload.
 
-- [ ] **Narrow `revalidatePath` scope** — currently invalidates the entire app on every mutation, causing unnecessary re-renders/refetches app-wide:
-  - [src/features/auth/actions/auth.ts](src/features/auth/actions/auth.ts#L59-L107)
-  - [src/features/store/actions/menu.ts](src/features/store/actions/menu.ts#L83)
-  - [src/features/profile/actions/profile.ts](src/features/profile/actions/profile.ts#L90)
-  - Replace `revalidatePath("/", "layout")` with the specific route(s) actually affected.
+- [x] **Narrow `revalidatePath` scope**:
+  - [menu.ts](src/features/store/actions/menu.ts) / [profile.ts](src/features/profile/actions/profile.ts) now revalidate the specific `/store/[id]` or `/profile/[id]` path instead of `"/", "layout"`.
+  - [auth.ts](src/features/auth/actions/auth.ts): sign-in/up/out/reset-password intentionally kept at `"/", "layout"` — `SessionProvider` (which needs refreshing) lives in the root layout, so that's already the minimal correct scope. Removed the pointless revalidate call in `forgetPasswordAction` (it doesn't mutate any cached data).
 
-- [ ] **Add pagination/limits to unbounded queries**:
-  - [src/features/store/actions/menu.ts](src/features/store/actions/menu.ts#L110-L140) — `getMenuItemsAction()` fetches all menu items for a store.
-  - [src/features/store/utils/claimedBuildings.ts](src/features/store/utils/claimedBuildings.ts#L10-L40) — `getClaimedStores()` fetches all stores with no limit.
+- [x] **Add pagination/limits to unbounded queries**:
+  - `getMenuItemsAction()` — added `.limit(100)` + narrowed `select()`.
+  - `getClaimedStores()` — pushed `building_id IS NOT NULL` into SQL instead of an arbitrary `.limit()` (the map needs *all* claimed buildings, so a hard cap would break it).
 
 ## Medium Priority
 
-- [ ] **Lazy-load heavy, rarely-first-paint components** with `next/dynamic` (no dynamic imports currently exist):
-  - Map (`maplibre-gl` + `@vis.gl/react-maplibre`, ~500KB) — [src/features/map/components/MapDisplay.tsx](src/features/map/components/MapDisplay.tsx)
-  - QR scanner (`html5-qrcode`) — [src/features/qr/components/QRScanner.tsx](src/features/qr/components/QRScanner.tsx)
-  - Image cropper (`react-image-crop`) — [src/components/shared/AppImagePicker.tsx](src/components/shared/AppImagePicker.tsx)
+- [x] **Lazy-load heavy, rarely-first-paint components** with `next/dynamic`:
+  - Map — lazy in both [MapPageWrapper.tsx](src/features/map/components/MapPageWrapper.tsx) and [StoreRegisterPageClient.tsx](src/features/store/components/store/StoreRegisterPageClient.tsx).
+  - QR scanner — lazy in [scanner/page.tsx](app/(protected)/(qr)/scanner/page.tsx).
+  - Image cropper — extracted into [ImageCropDialog.tsx](src/components/shared/ImageCropDialog.tsx) and lazy-loaded from `AppImagePicker.tsx`.
 
-- [ ] **Simplify/split large multi-effect components**:
-  - [src/features/qr/components/QRScanner.tsx](src/features/qr/components/QRScanner.tsx) — 3 `useEffect`s + multiple refs (`qrEngineRef`, `isStartingRef`, `scanLockRef`) managing scanner lifecycle; extract into a `useQrScanner` hook.
-  - [src/features/store/components/menu/MenuForm.tsx](src/features/store/components/menu/MenuForm.tsx#L56-L98) — preview-sync effect depends on 8 values including `watchedValues`; derive with `useMemo` instead of an effect where possible.
-  - [src/features/map/components/MapDisplay.tsx](src/features/map/components/MapDisplay.tsx#L58-L82) — geolocation + cached-location effects can race; consolidate into one effect/hook with clear state transitions.
-  - [src/components/shared/AppImagePicker.tsx](src/components/shared/AppImagePicker.tsx) — separate cropping logic from upload/form-integration logic into its own hook.
+- [x] **Simplify/split large multi-effect components** — extracted into hooks:
+  - `QRScanner.tsx` → [useQrScanner.ts](src/features/qr/hooks/useQrScanner.ts)
+  - `MapDisplay.tsx` → [useMapInitialization.ts](src/features/map/hooks/useMapInitialization.ts)
+  - `MenuForm.tsx` → [useMenuPreviewSync.ts](src/features/store/hooks/useMenuPreviewSync.ts) (kept as an effect, not `useMemo` — it manages an object-URL lifecycle + calls an external callback, a legitimate effect per React's own guidance, not a pure derivation)
+  - `AppImagePicker.tsx` — cropping UI split into its own component rather than a hook, since that's what enabled the dynamic import.
 
-- [ ] **Memoize event handlers and derived lists** to cut re-renders:
-  - [src/features/map/components/MapDisplay.tsx](src/features/map/components/MapDisplay.tsx#L116-L129) — wrap `handleMapLoad`, `handleTiltToggle`, `handleLocateToggle` in `useCallback`.
-  - [src/features/store/components/menu/MenuSheet.tsx](src/features/store/components/menu/MenuSheet.tsx#L28) — memoize the `menuItems` map and consider `React.memo` on `MenuCard`.
-  - [src/features/profile/components/ProfileStats.tsx](src/features/profile/components/ProfileStats.tsx#L32) — hoist static `stats` array out of the component (or `useMemo`) to avoid re-creating it every render.
+- [x] **Memoize event handlers and derived lists**:
+  - `MapDisplay.tsx` handlers wrapped in `useCallback`.
+  - `MenuCard` wrapped in `React.memo`.
+  - `ProfileStats` stats array now `useMemo`'d (not a hoisted constant — it depends on `profile?.created_at`).
 
-- [ ] **Extract duplicated mutation/error-handling patterns** into a shared helper:
-  - `prepareProfileMutation`/`executeProfileMutation` in [src/features/profile/actions/profile.ts](src/features/profile/actions/profile.ts#L55-L92) vs `prepareMenuMutation`/`executeMenuMutation` in [src/features/store/actions/menu.ts](src/features/store/actions/menu.ts#L21-L73).
-  - Duplicate/unique-constraint (`23505`) handling in [profile.ts](src/features/profile/actions/profile.ts#L79) and [store.ts](src/features/store/actions/store.ts#L41-L44).
+- [x] **Extract duplicated mutation/error-handling patterns** — partially done:
+  - Unique-constraint (`23505`) handling unified into [postgresError.ts](src/lib/utils/postgresError.ts), used by both `profile.ts` and `store.ts`.
+  - Full `prepare/execute` merge between `menu.ts` and `profile.ts` intentionally **not** done — the two flows differ enough (auth error shape, revalidation target) that forcing a shared generic adds risk for a maintainability-only win with no speed/data benefit.
 
 ## Low Priority / Cleanup
 
-- [ ] Remove unused exports flagged by TS/ESLint (dead code adds to bundle & maintenance overhead):
+- [ ] Remove unused exports flagged by TS/ESLint — **intentionally skipped**: verified via reference search that these truly have zero usages, but they're shadcn-managed UI-kit files, bundlers already tree-shake unused exports (no real bundle-size win), and deleting risks fighting future `shadcn add` regenerations:
   - [src/components/ui/sheet.tsx](src/components/ui/sheet.tsx#L138-L142) — `SheetTrigger`, `SheetClose`, `SheetFooter`
   - [src/components/ui/avatar.tsx](src/components/ui/avatar.tsx#L107-L108) — `AvatarGroup`, `AvatarGroupCount`
   - [src/components/ui/dialog.tsx](src/components/ui/dialog.tsx#L157-L163) — `DialogClose`, `DialogOverlay`, `DialogPortal`
   - [src/components/ui/field.tsx](src/components/ui/field.tsx#L230-L235) — `FieldGroup`, `FieldLegend`, `FieldSeparator`, `FieldSet`, `FieldContent`, `FieldTitle`
   - [src/components/ui/input-group.tsx](src/components/ui/input-group.tsx#L147) — `InputGroupText`
-- [ ] Replace the raw `<img>` in [src/components/shared/AppImagePicker.tsx](src/components/shared/AppImagePicker.tsx#L172) with `next/image` where feasible (live crop preview may still need a plain `<img>`, document why if kept).
-- [ ] Consider a shared form wrapper for the repeated `useForm` + `useTransition` + image picker + submit-button pattern used in `MenuForm`, `ProfileForm`, and `RegisterStoreForm`.
+- [x] Raw `<img>` in the crop dialog — kept intentionally (documented with a lint-disable comment); it's the live crop-preview surface for `react-image-crop`, which needs a real DOM `<img>` ref, not `next/image`.
+- [ ] Shared form wrapper for `useForm` + `useTransition` + image picker + submit pattern (`MenuForm`, `ProfileForm`, `RegisterStoreForm`) — not done, still a good maintainability win, low urgency.
+
+## Next Up (from 2026-09-12 architecture review)
+
+- [x] Type `AuthState.profile`/`store` (was `any`) — added `AuthProfile`/`AuthStore` interfaces in [auth/types/index.ts](src/features/auth/types/index.ts) matching the exact columns selected by `SessionProvider`/`AuthProvider`. This also surfaced and fixed a real bug: `AuthProvider`'s client-side `stores` refetch was missing `.single()` (present in `SessionProvider`'s SSR fetch), so `store` briefly became an array instead of an object after sign-in, and `hasStore` could be `true` even with zero stores (`!![]` is `true` in JS).
+- [ ] No automated tests exist anywhere in the repo — highest-risk gap for an app handling auth/loyalty data. Start with Vitest + RTL on server actions and the newly-extracted hooks.
+- [ ] `react-hooks/set-state-in-effect` lint errors in `ThemeToggle`, `MenuCard`, `useMapInitialization`, `useQrScanner` — mostly benign (hydration-safe `mounted` flags) but worth a pass to convert to derived state where possible.
+- [ ] Remaining `any` usage: action `dbOperation` params/`catch` blocks in `menu.ts`/`profile.ts`, `MenuItemsAction`/`MenuBaseFormProps` in `types/menu.ts`, `InputFieldProps.control`/`AppImagePickerProps` generics, `AuthFormProps.action` data param.
+- [ ] No rate limiting on `signInAction`/`signUpAction`/resend-email server actions — relies entirely on Supabase's own throttling.
+- [ ] `uploadStorageFile()` trusts client-supplied `file.type` for MIME validation — a magic-byte check would be more robust (low priority; Storage + `next/image` render it safely either way).
 
 ## Notes
 - No `React.memo` usage exists anywhere in the codebase yet — apply selectively to list-item components (`MenuCard`, marker components) rather than everywhere.

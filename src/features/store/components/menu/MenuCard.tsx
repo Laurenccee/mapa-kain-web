@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { usePathname } from "next/navigation";
 import { MenuCardProps } from "../../types/menu";
 
-export default function MenuCard({
+function MenuCard({
   image_url,
   name,
   price,
@@ -61,3 +61,5 @@ export default function MenuCard({
     </Card>
   );
 }
+
+export default memo(MenuCard);

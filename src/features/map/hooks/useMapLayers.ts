@@ -48,6 +48,8 @@ export function useMapLayers(
     syncClaimedLayers(map);
   }, [mapRef, syncClaimedLayers]);
 
+  // `idle` fires after moveend/zoomend/style changes settle, so it alone is
+  // enough to keep claimed-building layers in sync without duplicate scans.
   const handleMapIdle = useCallback(
     (e: any) => {
       setIsLayersReady(true);
@@ -56,13 +58,6 @@ export function useMapLayers(
       } catch (err) {
         console.warn("Layers compiling baseline metadata:", err);
       }
-    },
-    [syncClaimedLayers],
-  );
-
-  const handleMoveEnd = useCallback(
-    (e: any) => {
-      syncClaimedLayers(e.target);
     },
     [syncClaimedLayers],
   );
@@ -138,7 +133,6 @@ export function useMapLayers(
     selectedGeoJson,
     claimedGeoJson,
     handleMapIdle,
-    handleMoveEnd,
     handleMapClick,
     clearSelection,
   };

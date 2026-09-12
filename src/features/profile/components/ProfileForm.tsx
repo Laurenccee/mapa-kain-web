@@ -24,6 +24,7 @@ import {
 } from "../schemas/profileSchemas";
 import { createProfile, editProfile, deleteAvatar } from "../actions/profile";
 import { uploadAvatar } from "@/actions/imageUpload";
+import { IMAGE_UPLOAD } from "@/utils/constants/image";
 import { ProfileFormProps } from "../types";
 import { ROUTES } from "@/utils/constants/routes";
 
@@ -45,6 +46,11 @@ export default function ProfileForm({
       let uploadedPath: string | null = null;
       try {
         if (data.avatar_url instanceof File) {
+          if (data.avatar_url.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+            throw new Error(
+              `Image is too large. Max size is ${IMAGE_UPLOAD.MAX_SIZE_BYTES / (1024 * 1024)}MB.`,
+            );
+          }
           uploadedPath = `${profileId}/avatar-${Date.now()}.${data.avatar_url.name.split(".").pop()}`;
           const avatarArg =
             mode === "update" ? defaultValues.avatar_url : profileId;

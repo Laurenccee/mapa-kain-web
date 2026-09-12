@@ -1,11 +1,15 @@
 "use server";
 
+import { updateTag } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
 import {
   RegisterStoreData,
   RegisterStoreSchema,
 } from "../schemas/storeSchemas";
 import { guardServerAction } from "@/features/auth/utils/serverAuth";
+import { isUniqueConstraintError } from "@/lib/utils/postgresError";
+import { CLAIMED_STORES_TAG } from "../constants/cache";
 
 export async function registerStoreAction(values: RegisterStoreData) {
   const supabase = await createClient();
@@ -39,7 +43,7 @@ export async function registerStoreAction(values: RegisterStoreData) {
     });
 
     if (storeError) {
-      if (storeError.code === "23505") {
+      if (isUniqueConstraintError(storeError)) {
         return {
           success: false,
           message:
@@ -48,6 +52,8 @@ export async function registerStoreAction(values: RegisterStoreData) {
       }
       throw storeError;
     }
+
+    updateTag(CLAIMED_STORES_TAG);
   } catch (error) {
     return {
       success: false,

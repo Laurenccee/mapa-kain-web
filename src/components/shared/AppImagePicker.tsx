@@ -2,25 +2,18 @@
 
 import * as React from "react";
 import Image from "next/image";
-import ReactCrop, {
-  centerCrop,
-  makeAspectCrop,
-  type Crop,
-} from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
+import dynamic from "next/dynamic";
 import { Camera, Utensils, User } from "lucide-react";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
+import { IMAGE_UPLOAD } from "@/utils/constants/image";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
+// react-image-crop is only needed once a file is picked.
+const ImageCropDialog = dynamic(() => import("./ImageCropDialog"), {
+  ssr: false,
+});
 
 interface AppImagePickerProps<T extends FieldValues> {
   name: Path<T>;
@@ -28,54 +21,6 @@ interface AppImagePickerProps<T extends FieldValues> {
   label?: string;
   variant?: "avatar" | "menu";
   disabled?: boolean;
-}
-
-function centerAspectCrop(
-  mediaWidth: number,
-  mediaHeight: number,
-  aspect: number,
-): Crop {
-  return centerCrop(
-    makeAspectCrop({ unit: "%", width: 90 }, aspect, mediaWidth, mediaHeight),
-    mediaWidth,
-    mediaHeight,
-  );
-}
-
-async function getCroppedFile(
-  image: HTMLImageElement,
-  crop: Crop,
-  originalFileName: string,
-): Promise<File> {
-  const canvas = document.createElement("canvas");
-  const pixelX = (crop.x / 100) * image.naturalWidth;
-  const pixelY = (crop.y / 100) * image.naturalHeight;
-  const pixelWidth = (crop.width / 100) * image.naturalWidth;
-  const pixelHeight = (crop.height / 100) * image.naturalHeight;
-
-  canvas.width = pixelWidth;
-  canvas.height = pixelHeight;
-
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(
-    image,
-    pixelX,
-    pixelY,
-    pixelWidth,
-    pixelHeight,
-    0,
-    0,
-    pixelWidth,
-    pixelHeight,
-  );
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) return reject(new Error("Canvas is empty"));
-      const ext = originalFileName.split(".").pop() || "jpg";
-      resolve(new File([blob], `cropped.${ext}`, { type: blob.type }));
-    }, "image/jpeg");
-  });
 }
 
 export function AppImagePicker<T extends FieldValues>({
@@ -86,13 +31,14 @@ export function AppImagePicker<T extends FieldValues>({
   disabled = false,
 }: AppImagePickerProps<T>) {
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const imgRef = React.useRef<HTMLImageElement>(null);
   const isAvatar = variant === "avatar";
   const aspect = isAvatar ? 1 : 16 / 9;
+  const maxDimension = isAvatar
+    ? IMAGE_UPLOAD.AVATAR_MAX_DIMENSION
+    : IMAGE_UPLOAD.MENU_MAX_DIMENSION;
 
   const [preview, setPreview] = React.useState<string | null>(null);
   const [cropSrc, setCropSrc] = React.useState<string | null>(null);
-  const [crop, setCrop] = React.useState<Crop>();
   const [pendingFileName, setPendingFileName] = React.useState("");
   const [isCropOpen, setIsCropOpen] = React.useState(false);
 
@@ -119,28 +65,14 @@ export function AppImagePicker<T extends FieldValues>({
           e.target.value = "";
         };
 
-        const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-          const { width, height } = e.currentTarget;
-          setCrop(centerAspectCrop(width, height, aspect));
-        };
-
-        const handleCropConfirm = async () => {
-          if (!imgRef.current || !crop) return;
-          try {
-            const croppedFile = await getCroppedFile(
-              imgRef.current,
-              crop,
-              pendingFileName,
-            );
-            const previewUrl = URL.createObjectURL(croppedFile);
-            if (preview) URL.revokeObjectURL(preview);
-            setPreview(previewUrl);
-            onChange(croppedFile);
-          } finally {
-            setIsCropOpen(false);
-            if (cropSrc) URL.revokeObjectURL(cropSrc);
-            setCropSrc(null);
-          }
+        const handleCropConfirm = async (croppedFile: File) => {
+          const previewUrl = URL.createObjectURL(croppedFile);
+          if (preview) URL.revokeObjectURL(preview);
+          setPreview(previewUrl);
+          onChange(croppedFile);
+          setIsCropOpen(false);
+          if (cropSrc) URL.revokeObjectURL(cropSrc);
+          setCropSrc(null);
         };
 
         const handleCropCancel = () => {
@@ -151,42 +83,18 @@ export function AppImagePicker<T extends FieldValues>({
 
         return (
           <>
-            <Dialog
-              open={isCropOpen}
-              onOpenChange={(open) => !open && handleCropCancel()}
-            >
-              <DialogContent showCloseButton={false} className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Crop Image</DialogTitle>
-                </DialogHeader>
-                {cropSrc && (
-                  <div className="flex justify-center overflow-hidden rounded-lg">
-                    <ReactCrop
-                      crop={crop}
-                      onChange={(_, pct) => setCrop(pct)}
-                      aspect={aspect}
-                      circularCrop={isAvatar}
-                      keepSelection
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        ref={imgRef}
-                        src={cropSrc}
-                        alt="Crop preview"
-                        onLoad={handleImageLoad}
-                        className="max-h-96 w-auto"
-                      />
-                    </ReactCrop>
-                  </div>
-                )}
-                <DialogFooter>
-                  <Button variant="outline" onClick={handleCropCancel}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCropConfirm}>Apply</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {cropSrc && (
+              <ImageCropDialog
+                open={isCropOpen}
+                cropSrc={cropSrc}
+                pendingFileName={pendingFileName}
+                aspect={aspect}
+                isAvatar={isAvatar}
+                maxDimension={maxDimension}
+                onConfirm={handleCropConfirm}
+                onCancel={handleCropCancel}
+              />
+            )}
 
             <div
               className={cn(

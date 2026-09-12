@@ -45,13 +45,16 @@ export default function AuthProvider({
             const [profileRes, storeRes] = await Promise.all([
               supabase
                 .from("profiles")
-                .select("*")
+                .select(
+                  "id, full_name, username, avatar_url, is_onboarded, created_at",
+                )
                 .eq("id", session.user.id)
                 .single(),
               supabase
                 .from("stores")
-                .select("*")
-                .eq("owner_id", session.user.id),
+                .select("id, name, description")
+                .eq("owner_id", session.user.id)
+                .single(),
             ]);
 
             setState({

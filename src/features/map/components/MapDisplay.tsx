@@ -1,14 +1,15 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useCallback } from "react";
 import { Layer, Map, Source } from "@vis.gl/react-maplibre";
-import type { MapRef } from "@vis.gl/react-maplibre";
+import type { MapRef, MapEvent } from "@vis.gl/react-maplibre";
 import { useTheme } from "next-themes";
 import type { GeolocateControl } from "maplibre-gl";
 
 import { MAPS } from "@/utils/constants/maps";
 import { useMapLayers } from "../hooks/useMapLayers";
+import { useMapInitialization } from "../hooks/useMapInitialization";
 import { MapLoader } from "../components/MapLoader";
 import { MapControls } from "./MapControls";
 
@@ -29,9 +30,8 @@ export default function MapDisplay({
 
   const mapRef = useRef<MapRef>(null);
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [initialViewState, setInitialViewState] = useState<any | null>(null);
-  const [hasCachedLocation, setHasCachedLocation] = useState(false);
+  const { mounted, initialViewState, hasCachedLocation } =
+    useMapInitialization();
   const [isTilted, setIsTilted] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
@@ -44,7 +44,6 @@ export default function MapDisplay({
     isLayersReady,
     setIsLayersReady,
     handleMapIdle,
-    handleMoveEnd,
     handleMapClick,
     claimedGeoJson,
     selectedGeoJson,
@@ -55,83 +54,35 @@ export default function MapDisplay({
     selectClaimedOnly,
   });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const cached = localStorage.getItem(MAPS.CACHE_KEY);
-    if (cached) {
-      try {
-        const { lng, lat } = JSON.parse(cached);
-        if (typeof lng === "number" && typeof lat === "number") {
-          setHasCachedLocation(true);
-          setInitialViewState({
-            longitude: lng,
-            latitude: lat,
-            zoom: 17,
-            pitch: MAPS.PITCH.TILTED,
-            bearing: -15,
-          });
-          return;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { longitude, latitude } = position.coords;
-          setHasCachedLocation(false);
-
-          setInitialViewState({
-            longitude,
-            latitude,
-            zoom: 16.5,
-            pitch: MAPS.PITCH.TILTED,
-            bearing: -15,
-          });
+  const handleMapLoad = useCallback(
+    (e: MapEvent) => {
+      // The map has rendered its first frame here, so it's safe to reveal it.
+      setIsLayersReady(true);
+      geoControlRef.current = setupGeolocation(
+        e.target,
+        hasCachedLocation,
+        (active) => {
+          setIsLocating(active);
+          setIsSearchingLocation(false);
         },
-        () => {
-          setInitialViewState({
-            longitude: MAPS.FALLBACK_PHILIPPINES.longitude,
-            latitude: MAPS.FALLBACK_PHILIPPINES.latitude,
-            zoom: 17,
-            pitch: MAPS.PITCH.TILTED,
-            bearing: -15,
-          });
-        },
+        () => setIsSearchingLocation(false),
       );
-    }
-  }, []);
+    },
+    [hasCachedLocation, setIsLayersReady],
+  );
 
-  const handleMapLoad = (e: any) => {
-    geoControlRef.current = setupGeolocation(
-      e.target,
-      hasCachedLocation,
-      () => setIsLayersReady(true),
-      (active) => {
-        setIsLocating(active);
-        setIsSearchingLocation(false);
-      },
-      () => setIsSearchingLocation(false),
-    );
-  };
-
-  const handleTiltToggle = (pressed: boolean) => {
+  const handleTiltToggle = useCallback((pressed: boolean) => {
     setIsTilted(pressed);
     mapRef.current?.easeTo({
       pitch: pressed ? MAPS.PITCH.TILTED : MAPS.PITCH.FLAT,
       duration: 500,
     });
-  };
+  }, []);
 
-  const handleLocateToggle = () => {
+  const handleLocateToggle = useCallback(() => {
     if (!isLocating) setIsSearchingLocation(true);
     geoControlRef.current?.trigger();
-  };
+  }, [isLocating]);
 
   const showLoader = !initialViewState || !isLayersReady;
 
@@ -159,7 +110,6 @@ export default function MapDisplay({
           attributionControl={false}
           onLoad={handleMapLoad}
           onIdle={handleMapIdle}
-          onMoveEnd={handleMoveEnd}
           onClick={canSelect ? handleMapClick : undefined}
         >
           <Source

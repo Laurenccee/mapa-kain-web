@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import MenuForm from "./MenuForm";
 import { UpdateMenuFormProps } from "../../types/menu";
 import { updateMenuAction } from "../../actions/menu";
-import { MenuFormData } from "../../schemas/menuSchema";
+import { MenuData, MenuFormData } from "../../schemas/menuSchema";
 
 const toFormValues = (
   menuItem: UpdateMenuFormProps["menuItem"],
@@ -33,6 +33,12 @@ export default function UpdateMenu({
     ],
   );
 
+  const submitAction = useCallback(
+    (values: MenuData, menu_id: string) =>
+      updateMenuAction(values, menu_id, menuItem.store_id),
+    [menuItem.store_id],
+  );
+
   return (
     <MenuForm
       key={menuItem.id}
@@ -43,7 +49,7 @@ export default function UpdateMenu({
       previousImageUrl={menuItem.image_url}
       onPreviewChange={onPreviewChange}
       onSuccess={onSuccess}
-      submitAction={updateMenuAction}
+      submitAction={submitAction}
     />
   );
 }

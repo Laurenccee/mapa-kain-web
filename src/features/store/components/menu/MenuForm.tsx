@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useTransition } from "react";
+import React, { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,11 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { AppImagePicker } from "@/components/shared/AppImagePicker";
 
 import { MenuData, MenuFormData, MenuSchema } from "../../schemas/menuSchema";
-import {
-  toPreviewImageUrl,
-  toPreviewPrice,
-} from "../../utils/menuPreviewHelper";
+import { useMenuPreviewSync } from "../../hooks/useMenuPreviewSync";
 import { uploadMenuImage } from "@/actions/imageUpload";
+import { IMAGE_UPLOAD } from "@/utils/constants/image";
 import { deleteMenuImage } from "../../actions/menu";
 import { MenuBaseFormProps } from "../../types/menu";
 
@@ -35,8 +33,6 @@ export default function MenuForm({
 }: MenuBaseFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const filePreviewUrlRef = useRef<string | null>(null);
-  const lastPickedFileRef = useRef<File | null>(null);
 
   const isUpdate = mode === "update";
   const formId = isUpdate ? `update-menu-form-${itemId}` : "create-menu-form";
@@ -59,59 +55,18 @@ export default function MenuForm({
     }
   }, [initialValues, reset, isUpdate]);
 
-  useEffect(() => {
-    return () => {
-      if (filePreviewUrlRef.current) {
-        URL.revokeObjectURL(filePreviewUrlRef.current);
-      }
-    };
-  }, []);
-
-  // Unified live preview syncing
-  useEffect(() => {
-    if (!onPreviewChange) return;
-
-    const values = { ...initialValues, ...watchedValues };
-    let previewImage: string;
-
-    if (values.menu_image_url instanceof File) {
-      if (values.menu_image_url !== lastPickedFileRef.current) {
-        if (filePreviewUrlRef.current) {
-          URL.revokeObjectURL(filePreviewUrlRef.current);
-        }
-        filePreviewUrlRef.current = URL.createObjectURL(values.menu_image_url);
-        lastPickedFileRef.current = values.menu_image_url;
-      }
-      previewImage = filePreviewUrlRef.current ?? "";
-    } else {
-      lastPickedFileRef.current = null;
-      previewImage = toPreviewImageUrl(values.menu_image_url);
-    }
-
-    onPreviewChange({
-      image_url: previewImage,
-      name: values.name?.trim() || "Your menu name",
-      price: toPreviewPrice(values.price),
-      description:
-        values.description?.trim() ||
-        "Your menu description will appear here.",
-      available: values.is_available ?? true,
-    });
-  }, [
-    onPreviewChange,
-    initialValues,
-    watchedValues.description,
-    watchedValues.menu_image_url,
-    watchedValues.is_available,
-    watchedValues.name,
-    watchedValues.price,
-  ]);
+  useMenuPreviewSync({ initialValues, watchedValues, onPreviewChange });
 
   const handleFormSubmit: SubmitHandler<MenuData> = (data) => {
     startTransition(async () => {
       let uploadedPath: string | null = null;
       try {
         if (data.menu_image_url instanceof File) {
+          if (data.menu_image_url.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+            throw new Error(
+              `Image is too large. Max size is ${IMAGE_UPLOAD.MAX_SIZE_BYTES / (1024 * 1024)}MB.`,
+            );
+          }
           uploadedPath = `${storeId}/menu-${Date.now()}.${data.menu_image_url.name.split(".").pop()}`;
           const publicUrl = await uploadMenuImage(
             data.menu_image_url,

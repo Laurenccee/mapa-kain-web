@@ -1,9 +1,25 @@
 import type { User } from "@supabase/supabase-js";
 
+// Mirrors the exact columns selected in SessionProvider/AuthProvider, not the full DB rows.
+export interface AuthProfile {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  is_onboarded: boolean;
+  created_at: string;
+}
+
+export interface AuthStore {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 export type AuthState = {
   user: User | null;
-  profile: any | null;
-  store: any | null;
+  profile: AuthProfile | null;
+  store: AuthStore | null;
 };
 
 export type AuthContextType = AuthState & {

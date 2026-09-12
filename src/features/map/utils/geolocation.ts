@@ -5,12 +5,9 @@ import { MAPS } from "@/utils/constants/maps";
 export function setupGeolocation(
   map: maplibregl.Map,
   hasFreshCache: boolean,
-  onLocationReady: () => void,
   onTrackingChange?: (active: boolean) => void,
   onError?: () => void,
 ) {
-  let locationResolved = hasFreshCache;
-
   const geoControl = new maplibregl.GeolocateControl({
     trackUserLocation: true,
     showUserLocation: true,
@@ -59,11 +56,6 @@ export function setupGeolocation(
         timestamp: Date.now(),
       }),
     );
-
-    if (!locationResolved) {
-      locationResolved = true;
-      onLocationReady();
-    }
   });
 
   return geoControl;

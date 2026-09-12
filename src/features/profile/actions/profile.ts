@@ -8,6 +8,8 @@ import {
 import { revalidatePath } from "next/cache";
 import { guardServerAction } from "@/features/auth/utils/serverAuth";
 import { PostgrestError } from "@supabase/supabase-js";
+import { ROUTES } from "@/utils/constants/routes";
+import { isUniqueConstraintError } from "@/lib/utils/postgresError";
 
 export async function deleteAvatar(path: string) {
   const supabase = await createClient();
@@ -81,13 +83,13 @@ async function executeProfileMutation(
     const { error: dbError } = await dbOperation(supabase, user, payload);
 
     if (dbError) {
-      if (dbError.code === "23505") {
+      if (isUniqueConstraintError(dbError)) {
         return { success: false, message: "This username is already taken." };
       }
       throw dbError;
     }
 
-    revalidatePath("/", "layout");
+    revalidatePath(ROUTES.PROFILE(user.id));
     return { success: true, message: successMessage };
   } catch (error: any) {
     return {

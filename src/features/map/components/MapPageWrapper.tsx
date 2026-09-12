@@ -1,10 +1,17 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import MapDisplay from "./MapDisplay";
+import dynamic from "next/dynamic";
 import StoreSheet from "@/features/store/components/store/StoreSheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { ClaimedStore } from "@/features/store/types/store";
 import { BuildingSelectionResult } from "../types";
+
+// maplibre-gl is ~500KB; only load it on the client once this route renders.
+const MapDisplay = dynamic(() => import("./MapDisplay"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-full w-full" />,
+});
 
 interface MapPageWrapper {
   claimedBuildingIds: string[];

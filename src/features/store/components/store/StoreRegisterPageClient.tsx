@@ -1,10 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 
-import MapDisplay from "@/features/map/components/MapDisplay";
 import RegisterStoreForm from "@/features/store/components/store/RegisterStoreForm";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BuildingSelectionResult } from "@/features/map/types";
+
+// maplibre-gl is ~500KB; only load it on the client once this route renders.
+const MapDisplay = dynamic(() => import("@/features/map/components/MapDisplay"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-full w-full" />,
+});
 
 interface StoreRegisterPageClientProps {
   claimedBuildingIds: string[];

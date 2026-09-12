@@ -30,9 +30,27 @@ const pwaWrappedConfig = withPWA({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
+  // MapTiler URLs carry a `?key=` query string, so they miss the default
+  // cache's image/json regexes and would otherwise fall back to a 1hr
+  // cross-origin NetworkFirst cache. Style/tiles rarely change, so cache
+  // them aggressively to cut repeat-visit data usage on the map.
+  extendDefaultRuntimeCaching: true,
   workboxOptions: {
     disableDevLogs: true,
     skipWaiting: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/api\.maptiler\.com\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "maptiler-tiles",
+          expiration: {
+            maxEntries: 256,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+        },
+      },
+    ],
   },
 })(nextConfig);
 

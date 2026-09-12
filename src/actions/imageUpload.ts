@@ -2,6 +2,7 @@
 
 import { guardServerAction } from "@/features/auth/utils/serverAuth";
 import { createClient } from "@/lib/supabase/server";
+import { IMAGE_UPLOAD } from "@/utils/constants/image";
 
 interface UploadConfig {
   bucket: string;
@@ -35,6 +36,19 @@ async function uploadStorageFile({
   file,
   oldFilePath,
 }: UploadConfig): Promise<string> {
+  if (
+    !IMAGE_UPLOAD.ALLOWED_MIME_TYPES.includes(
+      file.type as (typeof IMAGE_UPLOAD.ALLOWED_MIME_TYPES)[number],
+    )
+  ) {
+    throw new Error("Unsupported image type. Use JPEG, PNG, or WebP.");
+  }
+  if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+    throw new Error(
+      `Image is too large. Max size is ${IMAGE_UPLOAD.MAX_SIZE_BYTES / (1024 * 1024)}MB.`,
+    );
+  }
+
   const supabase = await createClient();
   const ext = file.name.split(".").pop() || "jpg";
   const fileName = `${prefix}-${Date.now()}.${ext}`;
