@@ -32,7 +32,8 @@ export default function MapDisplay({
   const { resolvedTheme } = useTheme();
   const { mounted, initialViewState, hasCachedLocation } =
     useMapInitialization();
-  const [isTilted, setIsTilted] = useState(false);
+  // Map always starts tilted (see useMapInitialization), so match that state.
+  const [isTilted, setIsTilted] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const geoControlRef = useRef<GeolocateControl | null>(null);
